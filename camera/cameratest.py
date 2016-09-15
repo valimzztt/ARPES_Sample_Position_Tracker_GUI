@@ -26,16 +26,19 @@ def test():
     c.stop_capture()
     c.disconnect()
 
-c = fc2.Context()
-c.connect(*c.get_camera_from_index(0))
+# c = fc2.Context()
+# c.connect(*c.get_camera_from_index(0))
+#
+# c.start_capture()
 
-c.start_capture()
+cap = cv2.VideoCapture(1)
 
 while(True):
     # Capture frame-by-frame
-    im = fc2.Image()
-    c.retrieve_buffer(im)
-    frame = np.array(im)
+    # im = fc2.Image()
+    # c.retrieve_buffer(im)
+    # frame = np.array(im)
+    ret, frame = cap.read()
 
     # Our operations on the frame come here
     ## draw a diagonal line
@@ -53,6 +56,7 @@ while(True):
         break
 
 # When everything done, release the capture
-c.stop_capture()
-c.disconnect()
+# c.stop_capture()
+# c.disconnect()
+cap.release()
 cv2.destroyAllWindows()
