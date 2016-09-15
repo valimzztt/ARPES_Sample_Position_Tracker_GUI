@@ -1,5 +1,6 @@
 import flycapture2 as fc2
 import numpy as np
+import cv2
 
 def test():
     print(fc2.get_library_version())
@@ -25,60 +26,33 @@ def test():
     c.stop_capture()
     c.disconnect()
 
-def setupCamera():
-    print(fc2.get_library_version())
-    c = fc2.Context()
-    c.connect(*c.get_camera_from_index(0))
+c = fc2.Context()
+c.connect(*c.get_camera_from_index(0))
 
-    # Custom format: set_format7_configuration(mode, x_offset, y_offset, width, height, pixel_format)
-    # Currently only Mono colour is supported
-    c.set_format7_configuration(fc2.MODE_0, 0, 0, 1280, 720, fc2.PIXEL_FORMAT_MONO8)
+c.start_capture()
 
-    print(c.get_camera_info())
-    # c.set_video_mode_and_frame_rate(fc2,
-    #         fc2.FRAMERATE_7_5)
-    # c.set_video_mode_and_frame_rate(fc2.VIDEOMODE_1280x960RGB, fc2.FRAMERATE_15)
-    m, f = c.get_video_mode_and_frame_rate()
-    print(m, f)
-    # print c.get_video_mode_and_frame_rate_info(m, f)
-    print(c.get_property_info(fc2.FRAME_RATE))
-    p = c.get_property(fc2.FRAME_RATE)
-    print(p)
-    c.set_property(**p)
-    print(c.get_format7_configuration())
-    return c
-
-
-def imageLoop(context):
-    c = context
-    c.start_capture()
+while(True):
+    # Capture frame-by-frame
     im = fc2.Image()
+    c.retrieve_buffer(im)
+    frame = np.array(im)
 
-    while(True):
-        try:
-            c.retrieve_buffer(im)
-            a = np.array(im)
-            print(a)
-        except:
-            c.stop_capture()
-            c.disconnect()
-            # report error and proceed
-            raise
+    # Our operations on the frame come here
+    ## draw a diagonal line
+    # frame = cv2.line(frame, (0,0), (frame.shape[1],frame.shape[0]), (255,0,0), 5)
+    # draw a rect
+    frame = cv2.rectangle(frame,
+                          (int(frame.shape[1]/2 - 50), int(frame.shape[0]/2 - 50)),
+                          (int(frame.shape[1]/2 + 50), int(frame.shape[0]/2 + 50)),
+                          (0,255,0),
+                          3)
 
+    # Display the resulting frame
+    cv2.imshow('frame',frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 
-
-
-
-
-if __name__ == "__main__":
-
-    try:
-        c = setupCamera()
-        imageLoop(c)
-        im = fc2.Image()
-        c.retrieve_buffer(im)
-        a = np.array(im)
-
-    except (KeyboardInterrupt, SystemExit):
-        print('Loop exited')
-
+# When everything done, release the capture
+c.stop_capture()
+c.disconnect()
+cv2.destroyAllWindows()
