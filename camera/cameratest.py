@@ -27,50 +27,42 @@ def test():
     c.stop_capture()
     c.disconnect()
 
-c = fc2.Context()
-c.connect(*c.get_camera_from_index(0))
+# c = fc2.Context()
+# c.connect(*c.get_camera_from_index(0))
+#
+# c.start_capture()
 
-c.start_capture()
-
-# cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(1)
 
 last = np.array([0])
 
 
 while(True):
     # Capture frame-by-frame
-    im = fc2.Image()
-    c.retrieve_buffer(im)
-    frame = np.array(im)
-    # ret, grey = cap.read()
+    # im = fc2.Image()
+    # c.retrieve_buffer(im)
+    # frame = np.array(im)
+    ret, im = cap.read()
 
-    # grey = cv2.cvtColor(grey, cv2.COLOR_BGR2GRAY)
-    frame = cv2.GaussianBlur(frame, (3,3), 2)
+    grey = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 
-    # Our operations on the grey come here
-    equ = cv2.equalizeHist(frame)
+    # Our operations on the frame come here
+    corners = cv2.goodFeaturesToTrack(grey, 25, 0.01, 10)
+    corners = np.int0(corners)
 
-
-    # draw a rect
-    frame = cv2.rectangle(frame,
-                          (int(frame.shape[1]/2 - 50), int(frame.shape[0]/2 - 50)),
-                          (int(frame.shape[1]/2 + 50), int(frame.shape[0]/2 + 50)),
-                          (0,255,0),
-                          3)
-
-    # grey = cv2.rectangle(grey, (0,0), (100,100), (0,255, 0), 3)
-
+    for i in corners:
+        x, y = i.ravel()
+        cv2.circle(im, (x,y), 3, 255, -1)
 
 
     # Display the resulting frame
-    cv2.imshow('grey',frame)
-    cv2.imshow('canny edge', equ)
+    cv2.imshow('im',im)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
 
 # When everything done, release the capture
-c.stop_capture()
-c.disconnect()
+# c.stop_capture()
+# c.disconnect()
 # cap.release()
 cv2.destroyAllWindows()

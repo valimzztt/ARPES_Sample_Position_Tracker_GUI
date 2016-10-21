@@ -7,6 +7,7 @@ from scipy.signal import find_peaks_cwt
 
 from camera.cameraconfigwidget import CameraConfigureWidget
 from utilities import ErrorPriority
+import cv2
 
 
 @unique
@@ -271,53 +272,63 @@ class PGCameraDaemon(QThread):
             # Create Grayscale matrix
             gray = np.array(im)
             # Create 3D matrix for 3 colors, RGB
-            frame = np.stack([gray, gray, gray], axis=2)
+            img = np.stack([gray, gray, gray], axis=2)
 
-            self.receivedFrame.emit(frame)
+            img = self.findSample(gray, img)
+
+            self.receivedFrame.emit(img)
             # self.msleep(100)
-
-            self.processFrame(frame)
-
 
         if(self.stop):
             self.context.stop_capture()
             self.changeStateTo(PGCameraStates.Connected) # this is reached when loop exits in a valid way
         return
 
-    @_monitorForErrors(False)
-    def processFrame(self, frame):
-        """
-        This function takes in frame data and processes it. The processing can be changed in this function.
+    @_monitorForErrors()
+    def findSample(self, gray, img):
+        # Our operations on the frame come here
+        gray = cv2.medianBlur(gray, 9)
+        ret, thresh = cv2.threshold(gray, 60, 255, cv2.THRESH_BINARY)
+        image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        matches = []
+        sides = []
+        for cnt in contours:
 
-        Sums the pixel data for each column.
+            area = cv2.contourArea(cnt)
+            # print(area)
 
-        Once the processing is complete, it emits a frameProcessed signal
-        :param frame: Numpy array containing pixel data. The dimensions are as follows: frame.shape = (width, height, 3)
-        In other words, the frame is a 3D matrix where the 3rd dimension contains 8-bit data for each color (assuming pixel format is RGB888).
-        :return:
-        """
-        # print(frame)
-        # add each colour value in quadrature
-        # mat = np.sqrt(frame[:,:,0]**2 + frame[:,:,1]**2 + frame[:,:,2]**2)
+            if (area > 100 and area < 1000):
+                x, y, w, h = cv2.boundingRect(cnt)
+                aspect_ratio = float(w) / h
+                # print(aspect_ratio)
 
-        # take only one channel
-        mat = frame[:, :, 0]
+                diff_to_square = abs(aspect_ratio - 1)
 
-        # sum over rows, aka sum of each column
-        colsum = mat.sum(axis=0)
-        SOR = colsum / 1000.0  # in units of 10^3
+                if (diff_to_square < 0.5):
+                    matches.append(cnt)
+            elif (area > 12000):
+                image = cv2.drawContours(image, [cnt], 0, (255, 255, 255), 3)
+                sides.append(cnt)
+        if len(sides) == 2:
+            x1, y1, w1, h1 = cv2.boundingRect(sides[0])
+            x2, y2, w2, h2 = cv2.boundingRect(sides[1])
 
-        # find the indexes of the peaks of the SOR, the second parameter gives the widths of the peaks
-        peaks = find_peaks_cwt(SOR, np.arange(5, 10))
-        peakVals = [SOR[i] for i in peaks]
+            # print(x1)
+            # print(x2)
 
-        self.data['SOR'] = SOR
-        self.data['peak_indexes'] = peaks
-        self.data['peak_values'] = peakVals
+            for cnt in matches:
+                x, y, w, h = cv2.boundingRect(cnt)
+                # print(x)
+                if (x1 < x2 and x1 <= x <= x2) or (x2 < x1 and x2 <= x <= x1):
+                    image = cv2.drawContours(image, [cnt], 0, (255, 255, 255), 3)
+                    img = cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-        # emit frameProcessed once finished
-        self.frameProcessed.emit(self.data)
+        else:
+            for cnt in matches:
+                x, y, w, h = cv2.boundingRect(cnt)
 
-
+                image = cv2.drawContours(image, [cnt], 0, (255, 255, 255), 3)
+                img = cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        return img
 
     _monitorForErrors = staticmethod(_monitorForErrors)
