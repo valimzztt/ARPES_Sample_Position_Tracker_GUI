@@ -269,10 +269,10 @@ class PGCameraDaemon(QThread):
             else:
                 errCount = 0
 
-            # Create Grayscale matrix
-            gray = np.array(im)
-            # Create 3D matrix for 3 colors, RGB
-            img = np.stack([gray, gray, gray], axis=2)
+            # Create color matrix
+            img = np.array(im)
+
+            gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
             img = self.findSample(gray, img)
 
