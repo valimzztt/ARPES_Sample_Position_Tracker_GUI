@@ -1,7 +1,8 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtMultimedia import *
-from PyQt5.QtGui import QImage, QPalette, QPainter, QRegion
-from PyQt5.QtCore import QRect, QPoint, Qt, pyqtSlot
+from PyQt5.QtGui import QImage, QPalette, QPainter, QRegion, QImageWriter
+from PyQt5.QtCore import QRect, QPoint, Qt, pyqtSlot, pyqtSignal
+from utilities import ErrorPriority
 import numpy as np
 import time
 
@@ -122,6 +123,8 @@ class ViewfinderWidget(QWidget):
     # time in ms to wait before restarting the stream
     RESTART_TIME = 1
 
+    erroredOut = pyqtSignal(str, ErrorPriority)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setAutoFillBackground(False)
@@ -190,4 +193,42 @@ class ViewfinderWidget(QWidget):
         # present on video surface
         self.surface.present(vidFrame)
 
+        self.currImg = qIm
+
         self.lastShowTime = time.time()
+
+    @pyqtSlot()
+    def saveCurrentFrame(self):
+        filename, formatstr = QFileDialog.getSaveFileName(parent=self, caption="Save Image", directory="untitled.png",
+                                           filter="PNG (*.png);;JPEG (*.jpg);;Bitmap (*.bmp);;Portable Bitmap (*.pbm);;Portable Graymap (*.pgm);;Portable Pixmap (*.ppm);;X11 Bitmap (*.xbm);;X11 Pixmap (*.xpm)")
+        if(len(filename) == 0):
+            return
+
+        if(formatstr == "PNG (*.png)"):
+            formatstr = "png"
+        elif formatstr == "JPEG (*jpg)":
+            formatstr = "jpg"
+        elif formatstr == "Bitmap (*.bmp)":
+            formatstr = "bmp"
+        elif formatstr == "Portable Bitmap (*.pbm)":
+            formatstr = "pbm"
+        elif formatstr == "Portable Graymap (*.pgm)":
+            formatstr = "pgm"
+        elif formatstr == "Portable Pixmap (*.ppm)":
+            formatstr = "ppm"
+        elif formatstr == "X11 Bitmap (*.xbm)":
+            formatstr = "xbm"
+        elif formatstr == "X11 Pixmap (*.xpm)":
+            formatstr = "xpm"
+        else:
+            self.erroredOut.emit("Invalid format, " + formatstr + ". No image saved.", ErrorPriority.Notice)
+
+        writer = QImageWriter(filename, formatstr.encode('utf-8'))
+
+        if(not writer.canWrite()):
+            self.erroredOut.emit("Cannot write image.", ErrorPriority.Notice)
+
+        if(not writer.write(self.currImg)):
+            self.erroredOut.emit("Cannot write image. " + writer.errorString(), ErrorPriority.Notice)
+
+

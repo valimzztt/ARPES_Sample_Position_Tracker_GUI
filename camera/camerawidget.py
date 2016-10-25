@@ -129,13 +129,16 @@ class CameraWidget(QWidget):
         self.toggleCamInfoAct.setToolTip("Show/Hide Camera Info")
         self.toolBar.addAction(self.toggleCamInfoAct)
 
+        self.toolBar.addSeparator()
+        camSaveIcon = QIcon('resources/save.png')
+        self.camSaveAct = QAction(camSaveIcon, "Save Image", self)
+        self.camSaveAct.setToolTip("Save current frame")
+        self.toolBar.addAction(self.camSaveAct)
+
         self.playAct.triggered.connect(self.startStreaming)
         self.stopAct.triggered.connect(self.stopStreaming)
         self.restartCamAct.triggered.connect(self.restartCamStream)
-
-
-
-
+        self.camSaveAct.triggered.connect(self.camView.saveCurrentFrame)
 
         vbox = QVBoxLayout()
         vbox.addWidget(self.toolBar)
