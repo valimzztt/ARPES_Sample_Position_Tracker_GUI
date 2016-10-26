@@ -39,9 +39,10 @@ class CameraPropertiesWidget(QWidget):
         self.savedProperties = dict()
         self.initialized = False
 
-    def setupUI(self, camD):
+    def setupUI(self, camD, config):
         self.camD = camD
         self.update_properties()
+        self.cam_mode = config['cam_mode']
 
         self.mainLayout = QVBoxLayout(self)
 
@@ -102,6 +103,11 @@ class CameraPropertiesWidget(QWidget):
                 spin.setRange(0.5, 4)
                 slider.setSingleStep(0.1)
                 spin.setSingleStep(0.1)
+            elif(propname == PGCameraProperties.FRAME_RATE.name):
+                slider.setRange(1, 60)
+                slider.setSingleStep(1)
+                spin.setRange(1, 60)
+                spin.setSingleStep(1)
 
 
 
@@ -198,6 +204,9 @@ class CameraPropertiesWidget(QWidget):
 
             self.setProperty(prop.name)
 
+
+        self.updateShutterLims()
+
         self.savedProperties = copy.deepcopy(self.properties)
 
         self.setLayout(self.mainLayout)
@@ -219,12 +228,18 @@ class CameraPropertiesWidget(QWidget):
         else:
             enabled = False
 
-        # self.labels[prop].setEnabled(enabled)
-        self.sliders[prop].setEnabled(enabled)
-        self.spinboxes[prop].setEnabled(enabled)
-        self.autoBoxes[prop].setEnabled(enabled)
+        if(prop != PGCameraProperties.FRAME_RATE.name):
+            # self.labels[prop].setEnabled(enabled)
+            self.sliders[prop].setEnabled(enabled)
+            self.spinboxes[prop].setEnabled(enabled)
+            self.autoBoxes[prop].setEnabled(enabled)
 
         self.properties[prop]['on_off'] = enabled
+
+        if(prop == PGCameraProperties.FRAME_RATE.name):
+            self.updateShutterLims()
+
+
 
         self.propertyChanged.emit(prop)
 
@@ -267,10 +282,13 @@ class CameraPropertiesWidget(QWidget):
         else:
             enabled = self.enableBoxes[prop].isChecked()
             auto = self.autoBoxes[prop].isChecked()
-            self.sliders[prop].setEnabled(enabled and not auto)
-            self.spinboxes[prop].setEnabled(enabled)
-            self.spinboxes[prop].setReadOnly(auto)
-            self.autoBoxes[prop].setEnabled(enabled)
+
+            if(prop != PGCameraProperties.FRAME_RATE.name):
+                self.sliders[prop].setEnabled(enabled and not auto)
+                self.spinboxes[prop].setEnabled(enabled)
+                self.spinboxes[prop].setReadOnly(auto)
+                self.autoBoxes[prop].setEnabled(enabled)
+
             self.enableBoxes[prop].setEnabled(True)
 
 
@@ -291,7 +309,7 @@ class CameraPropertiesWidget(QWidget):
         prop = sender.objectName()
 
         if prop not in self.properties.keys():
-            return # invalid property
+            return  # invalid property
 
         self.properties[prop]['abs_value'] = newValue
 
@@ -300,6 +318,14 @@ class CameraPropertiesWidget(QWidget):
 
         if self.spinboxes[prop].value() != newValue:
             self.spinboxes[prop].setValue(newValue)
+
+        if (PGCameraProperties.FRAME_RATE.name in self.enableBoxes) \
+                and self.enableBoxes[PGCameraProperties.FRAME_RATE.name].isChecked() \
+                and prop == PGCameraProperties.FRAME_RATE.name:
+            # print('Changed FR: ' + str(newValue))
+            maxShutter = 1000/newValue
+            self.sliders[PGCameraProperties.SHUTTER.name].setRange(0.01, maxShutter)
+            self.spinboxes[PGCameraProperties.SHUTTER.name].setRange(0.01, maxShutter)
 
         self.propertyChanged.emit(prop)
 
@@ -350,13 +376,17 @@ class CameraPropertiesWidget(QWidget):
         Loads the previously saved properties
         :return:
         """
-        if(self.savedProperties is None):
+        if(self.savedProperties is None or len(self.savedProperties) == 0):
             return
 
 
         self.properties = copy.deepcopy(self.savedProperties)
 
+
         for prop in PGCameraProperties:
+            if(prop not in self.properties):
+                continue
+
             enable = self.properties[prop.name]['on_off']
             self.enableBoxes[prop.name].setChecked(enable)
 
@@ -367,3 +397,21 @@ class CameraPropertiesWidget(QWidget):
             value = self.properties[prop.name]['abs_value']
             self.sliders[prop.name].setValue(value)
             self.spinboxes[prop.name].setValue(value)
+
+
+    def updateShutterLims(self):
+        enabled = self.enableBoxes[PGCameraProperties.FRAME_RATE.name].isChecked()
+
+        if not enabled:
+            if self.cam_mode == 7:
+                self.sliders[PGCameraProperties.SHUTTER.name].setMaximum(32000)
+                self.spinboxes[PGCameraProperties.SHUTTER.name].setMaximum(32000)
+            else:
+                self.sliders[PGCameraProperties.SHUTTER.name].setMaximum(8000)
+                self.spinboxes[PGCameraProperties.SHUTTER.name].setMaximum(8000)
+
+        else:
+            fr = self.properties[PGCameraProperties.FRAME_RATE.name]['abs_value']
+            maxShutter = 1000 / fr
+            self.sliders[PGCameraProperties.SHUTTER.name].setRange(0.01, maxShutter)
+            self.spinboxes[PGCameraProperties.SHUTTER.name].setRange(0.01, maxShutter)

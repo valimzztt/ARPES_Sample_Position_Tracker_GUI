@@ -209,7 +209,7 @@ class CameraWidget(QWidget):
         self.camD.camConnected.connect(self.updateViewToolTip)
 
         if(self.camD.state == PGCameraStates.Connected or self.camD.state == PGCameraStates.Streaming):
-            self.camPropWidget.setupUI(self.camD)
+            self.camPropWidget.setupUI(self.camD, config)
         else:
             self.camPropDock.close()
             self.toggleCamPropAct.setChecked(False)
@@ -242,6 +242,8 @@ class CameraWidget(QWidget):
         :param config: dictionary containing configuration values
         :return:
         """
+        self.camPropWidget.cam_mode = config['cam_mode']
+        self.camPropWidget.updateShutterLims()
         self.cameraInfo.updateCamConfig(config)
         self.camD.changeCameraConfig(**config)
         self.camView.setToolTip(self.cameraInfo.getRichText())
@@ -253,29 +255,33 @@ class CameraWidget(QWidget):
         else:
             self.camView.FRAME_RATE = fr
 
+
     @pyqtSlot(PGCameraStates, PGCameraStates)
     def updateCamStatus(self, newState, oldState):
         self.camStatusLbl.setText("<b>Status</b>:    " + newState.name)
         self.camStatusIcon.setText("<img src=\"" + self.statusIcons[newState.name] + "\">")
+
+        config = self.cameraConfigWidget.cam_config
 
         if (self.camD.state == PGCameraStates.Streaming):
             self.playAct.setEnabled(False)
             self.stopAct.setEnabled(True)
             self.toggleCamPropAct.setEnabled(True)
             if (not self.camPropWidget.initialized):
-                self.camPropWidget.setupUI(self.camD)
+                self.camPropWidget.setupUI(self.camD, config)
         elif self.camD.state == PGCameraStates.Connected:
             self.playAct.setEnabled(True)
             self.stopAct.setEnabled(False)
             self.toggleCamPropAct.setEnabled(True)
             if (not self.camPropWidget.initialized):
-                self.camPropWidget.setupUI(self.camD)
+                self.camPropWidget.setupUI(self.camD, config)
         else:
             self.playAct.setEnabled(False)
             self.stopAct.setEnabled(False)
             self.camPropDock.close()
             self.toggleCamPropAct.setChecked(False)
             self.toggleCamPropAct.setEnabled(False)
+
 
     @pyqtSlot()
     def startStreaming(self):
@@ -309,44 +315,3 @@ class CameraWidget(QWidget):
     def updateViewToolTip(self, *args, **kwargs):
         self.camView.setToolTip(self.cameraInfo.getRichText())
 
-    @pyqtSlot(PGCameraStates, PGCameraStates)
-    def updateCamStatus(self, newState, oldState):
-        self.camStatusLbl.setText("<b>Status</b>:    " + newState.name)
-        self.camStatusIcon.setText("<img src=\"" + self.statusIcons[newState.name] + "\">")
-
-        if (self.camD.state == PGCameraStates.Streaming):
-            self.playAct.setEnabled(False)
-            self.stopAct.setEnabled(True)
-            self.toggleCamPropAct.setEnabled(True)
-            if (not self.camPropWidget.initialized):
-                self.camPropWidget.setupUI(self.camD)
-        elif self.camD.state == PGCameraStates.Connected:
-            self.playAct.setEnabled(True)
-            self.stopAct.setEnabled(False)
-            self.toggleCamPropAct.setEnabled(True)
-            if (not self.camPropWidget.initialized):
-                self.camPropWidget.setupUI(self.camD)
-        else:
-            self.playAct.setEnabled(False)
-            self.stopAct.setEnabled(False)
-            self.camPropDock.close()
-            self.toggleCamPropAct.setChecked(False)
-            self.toggleCamPropAct.setEnabled(False)
-
-    @pyqtSlot(dict)
-    def changeCameraConfig(self, config):
-        """
-
-        :param config: dictionary containing configuration values
-        :return:
-        """
-        self.cameraInfo.updateCamConfig(config)
-        self.camD.changeCameraConfig(**config)
-        self.camView.setToolTip(self.cameraInfo.getRichText())
-        fr = self.camD.getFrameRate()
-
-        # -1 indicates error
-        if fr == -1 or fr is None:
-            return
-        else:
-            self.camView.FRAME_RATE = fr
