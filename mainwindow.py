@@ -163,25 +163,28 @@ class MainWindow(QMainWindow):
             settings.endGroup()
             settings.beginGroup("Center")
             settings.setValue("Name", self.panel.currentWidget.objectName())
-            # print(self.panel.currentWidget.objectName())
             settings.endGroup()
 
+        for camWidget in CameraWidget.camlist:
+            settings.beginGroup(camWidget.objectName())
 
-        if (saveProps):
-            if self.camWidget.camPropWidget.initialized:
-                settings.beginGroup("CamProps")
-                props = self.camWidget.camPropWidget.properties
-                arr = pickle.dumps(props)
-                settings.setValue("props", arr)
+            if (saveProps):
+                if camWidget.camPropWidget.initialized:
+                    settings.beginGroup("CamProps")
+                    for camWidget in CameraWidget.camlist:
+                        props = camWidget.camPropWidget.properties
+                        arr = pickle.dumps(props)
+                        settings.setValue("props", arr)
+                    settings.endGroup()
+
+            if saveConfig:
+                settings.beginGroup("CamConfig")
+                config = camWidget.cameraConfigWidget.cam_config
+                for k, v in config.items():
+                    settings.setValue(k, v)
                 settings.endGroup()
 
-        if saveConfig:
-            settings.beginGroup("CamConfig")
-            config = self.camWidget.cameraConfigWidget.cam_config
-            for k, v in config.items():
-                settings.setValue(k, v)
             settings.endGroup()
-
 
     def loadSettings(self):
         settings = QSettings("UBC", "Arpes")
@@ -196,13 +199,24 @@ class MainWindow(QMainWindow):
         saveConfig = settings.value("saveConfig", True)
         settings.endGroup()
 
+        settings.beginGroup("Cameras")
+        arr = settings.value('List')
 
-
-        self.camWidget = CameraWidget(self)
-        camDock = QDockWidget(self.camWidget.objectName(), self)
-        camDock.setWidget(self.camWidget)
-        camDock.setObjectName(self.camWidget.objectName())
-        self.addDockWidget(Qt.RightDockWidgetArea, camDock)
+        if arr:
+            camlist = pickle.loads(arr)
+            for name in camlist:
+                cameraWidget = CameraWidget(self, name)
+                camDock = QDockWidget(cameraWidget.objectName(), self)
+                camDock.setWidget(cameraWidget)
+                camDock.setObjectName(cameraWidget.objectName())
+                self.addDockWidget(Qt.RightDockWidgetArea, camDock)
+        else:
+            self.cameraWidget = CameraWidget(self)
+            camDock = QDockWidget(self.cameraWidget.objectName(), self)
+            camDock.setWidget(self.cameraWidget)
+            camDock.setObjectName(self.cameraWidget.objectName())
+            self.addDockWidget(Qt.RightDockWidgetArea, camDock)
+        settings.endGroup()
 
         if saveGeo:
             settings.beginGroup("MainWindow")
@@ -215,7 +229,6 @@ class MainWindow(QMainWindow):
             settings.endGroup()
             settings.beginGroup("Center")
             name = settings.value("Name")
-            print(name)
             if name:
                 if name == 'Blank':
                     self.panel.setToBlank()
@@ -229,19 +242,22 @@ class MainWindow(QMainWindow):
                         self.removeDockWidget(dockwidget)
             settings.endGroup()
 
-            if saveProps and self.camWidget.camPropWidget.initialized:
+        for camWidget in CameraWidget.camlist:
+            settings.beginGroup(camWidget.objectName())
+
+            if saveProps and camWidget.camPropWidget.initialized:
                 settings.beginGroup("CamProps")
                 arr = settings.value("props")
                 if arr:
                     props = pickle.loads(arr)
-                    self.camWidget.camPropWidget.properties = props
-                    self.camWidget.camPropWidget.setAllProperties()
-                    self.camWidget.camPropWidget.revertSavedProperties()
+                    camWidget.camPropWidget.properties = props
+                    camWidget.camPropWidget.setAllProperties()
+                    camWidget.camPropWidget.revertSavedProperties()
                 settings.endGroup()
 
             if saveConfig:
                 settings.beginGroup("CamConfig")
-                config = self.camWidget.cameraConfigWidget.cam_config
+                config = camWidget.cameraConfigWidget.cam_config
                 reload = False
                 for k, v in config.items():
                     val = settings.value(k)
@@ -249,10 +265,37 @@ class MainWindow(QMainWindow):
                         config[k] = val
                         reload = True
                 if reload:
-                    self.camWidget.cameraConfigWidget.reloadConfigData()
+                    camWidget.cameraConfigWidget.reloadConfigData()
                 settings.endGroup()
 
+            settings.endGroup()
 
+    def addNewCamera(self, id):
+        """
+        Adds a new camera widget
+        :param id: string identifier for the camera
+        :return:
+        """
+        cameraWidget = CameraWidget(self, id)
+        dock = QDockWidget(cameraWidget.objectName(), self)
+        dock.setWidget(cameraWidget)
+        dock.setObjectName(cameraWidget.objectName())
+        self.addDockWidget(Qt.RightDockWidgetArea, dock)
+
+
+    def removeCamera(self):
+        cameraWidget = self.sender()
+        cameraWidget.stopStreaming()
+        time.sleep(0.5)
+        if self.panel.currentWidget == cameraWidget:
+            dock = self.panel.setToBlank()
+            if dock:
+                self.removeDockWidget(dock)
+
+        else:
+            dock = cameraWidget.parent()
+            self.removeDockWidget(dock)
+        cameraWidget.deleteLater()
 
 
     def closeEvent(self, event):

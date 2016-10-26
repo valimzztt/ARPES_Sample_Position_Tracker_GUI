@@ -13,16 +13,32 @@ from camera.viewfinderwidget import ViewfinderWidget
 
 
 class CameraWidget(QWidget):
+    camlist = [] # list of camera widgets
+    addCameraRequested = pyqtSignal(str)
+    removeCameraRequested = pyqtSignal()
 
     def __init__(self, parent=None, name=''):
         super().__init__(parent)
+        CameraWidget.camlist.append(self)
 
         if parent:
             self.main = parent # first parent is always the mainwindow
         else:
             return
 
-        self.setObjectName('Camera View')
+        camNum = len(CameraWidget.camlist)
+        if camNum > 1:
+            if name == '':
+                self.name = '#'+ str(camNum)
+            else:
+                self.name = name
+
+            self.addStr = " ({0})".format(self.name)
+        else:
+            self.name = ''
+            self.addStr = ''
+
+        self.setObjectName('Camera View' + self.addStr)
 
         self.setupUI()
         self.setupView()
@@ -44,26 +60,27 @@ class CameraWidget(QWidget):
         self.main.removeDockWidget(self.camPropDock)
         self.camPropWidget.deleteLater()
 
+        CameraWidget.camlist.remove(self)
         QWidget.deleteLater(self)
 
 
     def setupUI(self):
         self.cameraConfigWidget = CameraConfigureWidget(self)
-        self.camConfigDock = QDockWidget("Camera Configuration", self)
+        self.camConfigDock = QDockWidget("Camera Configuration" + self.addStr, self)
         self.camConfigDock.setWidget(self.cameraConfigWidget)
-        self.camConfigDock.setObjectName("Camera Configuration")
+        self.camConfigDock.setObjectName("Camera Configuration" + self.addStr)
         self.main.addDockWidget(Qt.BottomDockWidgetArea, self.camConfigDock)
 
         self.cameraInfo = CameraInfoWidget(self)
-        self.camInfoDock = QDockWidget("Camera Info", self)
+        self.camInfoDock = QDockWidget("Camera Info" + self.addStr, self)
         self.camInfoDock.setWidget(self.cameraInfo)
-        self.camInfoDock.setObjectName("Camera Info")
+        self.camInfoDock.setObjectName("Camera Info" + self.addStr)
         self.main.addDockWidget(Qt.BottomDockWidgetArea, self.camInfoDock)
 
         self.camPropWidget = CameraPropertiesWidget(self)
-        self.camPropDock = QDockWidget("Camera Properties", self)
+        self.camPropDock = QDockWidget("Camera Properties" + self.addStr, self)
         self.camPropDock.setWidget(self.camPropWidget)
-        self.camPropDock.setObjectName("Camera Properties")
+        self.camPropDock.setObjectName("Camera Properties" + self.addStr)
         self.main.addDockWidget(Qt.RightDockWidgetArea, self.camPropDock)
 
         self.cameraConfigWidget.erroredOut.connect(self.main.processError)
@@ -72,8 +89,13 @@ class CameraWidget(QWidget):
     def setupView(self):
         self.camView = ViewfinderWidget(self)
 
+        camNum = len(CameraWidget.camlist)
+        if camNum > 1:
+            name = " #" + str(camNum - 1)
+        else:
+            name = ''
 
-        self.toolBar = QToolBar('Camera')
+        self.toolBar = QToolBar('Camera'+ name)
         lbl = QLabel("<b>Camera Controls</b>:")
         self.toolBar.addWidget(lbl)
         playIcon = QIcon('resources/button_blue_play.png')
@@ -90,7 +112,7 @@ class CameraWidget(QWidget):
         self.toggleCamPropAct.setToolTip("Show/Hide Camera Properties")
         self.toolBar.addAction(self.toggleCamPropAct)
         self.toolBar.addSeparator()
-        self.toolBar.setObjectName("Camera Controls")
+        self.toolBar.setObjectName("Camera Controls" + name)
 
         self.statusIcons = dict()
         self.statusIcons['Streaming'] = ('resources/status_green.png')
@@ -139,6 +161,28 @@ class CameraWidget(QWidget):
         self.stopAct.triggered.connect(self.stopStreaming)
         self.restartCamAct.triggered.connect(self.restartCamStream)
         self.camSaveAct.triggered.connect(self.camView.saveCurrentFrame)
+
+        self.toolBar.addSeparator()
+        empty = QWidget()
+        empty.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.toolBar.addWidget(empty)
+        lbl = QLabel("<b>Camera Views:</b>")
+        self.toolBar.addWidget(lbl)
+        camAddIcon = QIcon('resources/camera_new.png')
+        self.addCamAct = QAction(camAddIcon, "Add Camera", self)
+        self.addCamAct.setToolTip("Adds a new camera for streaming")
+        self.toolBar.addAction(self.addCamAct)
+        self.addCamAct.triggered.connect(self.emitNewCameraRequest)
+        self.addCameraRequested.connect(self.main.addNewCamera)
+
+        if len(CameraWidget.camlist) > 1:
+            camRemoveIcon = QIcon('resources/camera_delete.png')
+            self.removeCamAct = QAction(camRemoveIcon, "Remove Camera", self)
+            self.removeCamAct.setToolTip("Remove this camera")
+            self.toolBar.addAction(self.removeCamAct)
+            self.removeCamAct.triggered.connect(self.emitRemoveCameraRequest)
+            self.removeCameraRequested.connect(self.main.removeCamera)
+
 
         vbox = QVBoxLayout()
         vbox.addWidget(self.toolBar)
