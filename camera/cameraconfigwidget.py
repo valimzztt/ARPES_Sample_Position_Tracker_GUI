@@ -38,7 +38,8 @@ class CameraConfigureWidget(QWidget):
         self.reloadConfigData()
 
     def __del__(self):
-        CameraConfigureWidget.usedCamIndices.remove(self.cam_config['cam_index'])
+        if(self.cam_config['cam_index'] in CameraConfigureWidget.usedCamIndices):
+            CameraConfigureWidget.usedCamIndices.remove(self.cam_config['cam_index'])
 
     def setupUI(self):
         camConfigGB = QGroupBox('Camera Configuration')
@@ -121,7 +122,7 @@ class CameraConfigureWidget(QWidget):
         self.camIndexCombo.clear()
         self.camIndexCombo.addItems([str(i) for i in range(self.camContext.get_num_of_cameras())])
 
-        self.camIndexCombo.setCurrentIndex(self.cam_config['cam_index'])
+        self.camIndexCombo.setCurrentIndex(int(self.cam_config['cam_index']))
         self.camModeCombo.setCurrentText(str(self.cam_config['cam_mode']))
         self.camX_edit.setText(str(self.cam_config['cam_x']))
         self.camY_edit.setText(str(self.cam_config['cam_y']))

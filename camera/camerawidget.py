@@ -55,8 +55,6 @@ class CameraWidget(QWidget):
         self.main.removeDockWidget(self.camInfoDock)
         self.cameraInfo.deleteLater()
 
-        self.main.removeDockWidget(self.histoDock)
-
         self.main.removeDockWidget(self.camPropDock)
         self.camPropWidget.deleteLater()
 
@@ -289,7 +287,7 @@ class CameraWidget(QWidget):
             return
 
         config = self.cameraConfigWidget.cam_config
-        format = QVideoSurfaceFormat(QSize(config['cam_w'], config['cam_h']), QVideoFrame.Format_RGB24)
+        format = QVideoSurfaceFormat(QSize(int(config['cam_w']), int(config['cam_h'])), QVideoFrame.Format_RGB24)
 
         self.camView.surface.stop()
         self.camView.surface.start(format)

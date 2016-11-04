@@ -29,7 +29,7 @@ class MainWindow(QMainWindow):
         settings = QSettings("UBC", "Arpes")
 
         settings.beginGroup("ErrorHandling")
-        self.errorMode = settings.value("errorMode", ErrorHandlingModes.Default.value)
+        self.errorMode = int(settings.value("errorMode", ErrorHandlingModes.Default.value))
         settings.endGroup()
 
         # self.setupUI()
@@ -105,7 +105,7 @@ class MainWindow(QMainWindow):
         if self.errorMode < ErrorHandlingModes.Disabled.value:
             print(msg, file=sys.stderr)
             if priority.value >= ErrorPriority.Critical.value:
-                msg = time.strftime('<b>[%a, %d %b %Y %H:%M:%S, %z] (', time.gmtime()) + priority.name + ") </b>: " + msg
+                msg = time.strftime('<b>[%a, %d %b %Y %H:%M:%S, %z] (', time.gmtime()) + priority.name + ") </b> " + msg
             else:
                 msg = '(' + priority.name + ') : ' + msg
             self.log.append(msg + '\n')
@@ -116,13 +116,13 @@ class MainWindow(QMainWindow):
         settings = QSettings("UBC", "Arpes")
 
         settings.beginGroup("ErrorHandling")
-        errorMode = settings.value("errorMode", ErrorHandlingModes.Default.value)
+        errorMode = int(settings.value("errorMode", ErrorHandlingModes.Default.value))
         settings.endGroup()
 
         settings.beginGroup("SaveLoad")
-        saveGeo = settings.value("saveGeo", True) == 'true'
-        saveProps = settings.value("saveProps", True) == 'true'
-        saveConfig = settings.value("saveConfig", True) == 'true'
+        saveGeo = settings.value("saveGeo", "true") == 'true'
+        saveProps = settings.value("saveProps", "true") == 'true'
+        saveConfig = settings.value("saveConfig", "true") == 'true'
         settings.endGroup()
 
         settingsForm = SettingsDialog(errorMode, saveGeo, saveProps, saveConfig, self)
@@ -132,13 +132,13 @@ class MainWindow(QMainWindow):
 
             settings.beginGroup("ErrorHandling")
             self.errorMode = settingsForm.errorCombo.currentIndex()
-            settings.setValue("errorMode", self.errorMode)
+            settings.setValue("errorMode", str(self.errorMode))
             settings.endGroup()
 
             settings.beginGroup("SaveLoad")
-            settings.setValue("saveGeo", settingsForm.saveGeoCheck.isChecked())
-            settings.setValue("saveProps", settingsForm.savePropsCheck.isChecked())
-            settings.setValue("saveConfig", settingsForm.saveConfigCheck.isChecked())
+            settings.setValue("saveGeo", 'true' if settingsForm.saveGeoCheck.isChecked() else 'false')
+            settings.setValue("saveProps", 'true' if settingsForm.savePropsCheck.isChecked() else 'false')
+            settings.setValue("saveConfig", 'true' if settingsForm.saveConfigCheck.isChecked() else 'false')
             settings.endGroup()
         else:
             pass #do nothing
@@ -147,13 +147,13 @@ class MainWindow(QMainWindow):
         settings = QSettings("UBC", "Arpes")
 
         settings.beginGroup("ErrorHandling")
-        settings.setValue("errorMode", self.errorMode)
+        settings.setValue("errorMode", str(self.errorMode))
         settings.endGroup()
 
         settings.beginGroup("SaveLoad")
-        saveGeo = settings.value("saveGeo", True) == 'true'
-        saveProps = settings.value("saveProps", True) == 'true'
-        saveConfig = settings.value("saveConfig", True) == 'true'
+        saveGeo = settings.value("saveGeo", "true") == 'true'
+        saveProps = settings.value("saveProps", "true") == 'true'
+        saveConfig = settings.value("saveConfig", "true") == 'true'
         settings.endGroup()
 
         if(saveGeo):
@@ -190,13 +190,13 @@ class MainWindow(QMainWindow):
         settings = QSettings("UBC", "Arpes")
 
         settings.beginGroup("ErrorHandling")
-        self.errorMode = settings.value("errorMode", ErrorHandlingModes.Default.value)
+        self.errorMode = int(settings.value("errorMode", ErrorHandlingModes.Default.value))
         settings.endGroup()
 
         settings.beginGroup("SaveLoad")
-        saveGeo = settings.value("saveGeo", True)
-        saveProps = settings.value("saveProps", True)
-        saveConfig = settings.value("saveConfig", True)
+        saveGeo = settings.value("saveGeo", "true")
+        saveProps = settings.value("saveProps", "true")
+        saveConfig = settings.value("saveConfig", "true")
         settings.endGroup()
 
         settings.beginGroup("Cameras")
