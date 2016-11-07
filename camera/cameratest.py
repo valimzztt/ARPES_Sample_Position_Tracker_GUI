@@ -27,10 +27,11 @@ def test():
     c.stop_capture()
     c.disconnect()
 
-# c = fc2.Context()
-# c.connect(*c.get_camera_from_index(0))
-#
-# c.start_capture()
+c = fc2.Context()
+c.connect(*c.get_camera_from_index(0))
+c.set_format7_configuration(fc2.MODE_0, 0, 0, 640, 320, fc2.PIXEL_FORMAT_RGB8)
+
+c.start_capture()
 
 cap = cv2.VideoCapture(1)
 
@@ -39,24 +40,24 @@ last = np.array([0])
 
 while(True):
     # Capture frame-by-frame
-    # im = fc2.Image()
-    # c.retrieve_buffer(im)
-    # frame = np.array(im)
-    ret, im = cap.read()
+    im = fc2.Image()
+    c.retrieve_buffer(im)
+    im = np.array(im)
 
-    grey = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
-
-    # Our operations on the frame come here
-    corners = cv2.goodFeaturesToTrack(grey, 25, 0.01, 10)
-    corners = np.int0(corners)
-
-    for i in corners:
-        x, y = i.ravel()
-        cv2.circle(im, (x,y), 3, 255, -1)
+    # grey = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+    #
+    # # Our operations on the frame come here
+    # corners = cv2.goodFeaturesToTrack(grey, 25, 0.01, 10)
+    # corners = np.int(corners)
+    #
+    # for i in corners:
+    #     x, y = i.ravel()
+    #     cv2.circle(im, (x,y), 3, 255, -1)
 
 
     # Display the resulting frame
     cv2.imshow('im',im)
+    print(im)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 

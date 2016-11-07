@@ -5,6 +5,7 @@ from PyQt5.QtCore import QRect, QPoint, Qt, pyqtSlot, pyqtSignal
 from utilities import ErrorPriority
 import numpy as np
 import time
+import cv2
 
 
 """
@@ -138,6 +139,9 @@ class ViewfinderWidget(QWidget):
         # rate per second at which camera view is refreshed and re-drawn (since drawing takes time)
         self.FRAME_RATE = 24.0  # anything above 24 is considered smooth motion
 
+    def __del__(self):
+        cv2.destroyAllWindows()
+
     def closeEvent(self, QCloseEvent):
         del self.surface
 
@@ -182,6 +186,13 @@ class ViewfinderWidget(QWidget):
         if (time.time() - self.lastShowTime < 1.0/self.FRAME_RATE):
             return
 
+        #TODO remove when better solution is found
+        camD = self.sender()
+        camWidget = camD.parent()
+        name = camWidget.objectName()
+
+        cv2.namedWindow(name, cv2.WINDOW_NORMAL)
+        cv2.imshow(name, frame)
 
         # construct QImage
         qIm = QImage(frame, frame.shape[1], frame.shape[0], QImage.Format_RGB888)
