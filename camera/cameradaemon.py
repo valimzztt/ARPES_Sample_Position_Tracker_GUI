@@ -17,6 +17,12 @@ class PGCameraStates(Enum):
     Streaming = 2
     Disconnected = 3
 
+@unique
+class ImageMode(Enum):
+    Processed = 0
+    Original = 1
+    Threshold = 2
+
 
 class PGCameraDaemon(QThread):
     """
@@ -71,6 +77,9 @@ class PGCameraDaemon(QThread):
         self.state = PGCameraStates.Invalid
 
         self.data = dict() # data for plotting
+
+        self.threshold = 60
+        self.imageMode = ImageMode.Processed
 
         self.context = fc2.Context()
         self.changeStateTo(PGCameraStates.Disconnected)
@@ -272,11 +281,13 @@ class PGCameraDaemon(QThread):
             # Create color matrix
             img = np.array(im)
 
-            gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+            if(self.imageMode == ImageMode.Original):
+                self.receivedFrame.emit(img)
 
-            img = self.findSample(gray, img)
+            img = self.findSample(img)
 
-            self.receivedFrame.emit(img)
+            if(self.imageMode == ImageMode.Processed):
+                self.receivedFrame.emit(img)
             # self.msleep(100)
 
         if(self.stop):
@@ -285,10 +296,15 @@ class PGCameraDaemon(QThread):
         return
 
     @_monitorForErrors()
-    def findSample(self, gray, img):
+    def findSample(self, img):
         # Our operations on the frame come here
+        gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         gray = cv2.medianBlur(gray, 9)
-        ret, thresh = cv2.threshold(gray, 60, 255, cv2.THRESH_BINARY)
+        ret, thresh = cv2.threshold(gray, self.threshold, 255, cv2.THRESH_BINARY)
+
+        if (self.imageMode == ImageMode.Threshold):
+            self.receivedFrame.emit(thresh)
+
         image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         matches = []
         sides = []
@@ -330,5 +346,14 @@ class PGCameraDaemon(QThread):
                 image = cv2.drawContours(image, [cnt], 0, (255, 255, 255), 3)
                 img = cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
         return img
+
+
+    @pyqtSlot(int)
+    def changeImageMode(self, mode):
+        self.imageMode = ImageMode(mode)
+
+    @pyqtSlot(int)
+    def changeThreshold(self, thresh):
+        self.threshold = thresh
 
     _monitorForErrors = staticmethod(_monitorForErrors)

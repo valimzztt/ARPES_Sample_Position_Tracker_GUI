@@ -182,8 +182,24 @@ class CameraWidget(QWidget):
             self.removeCameraRequested.connect(self.main.removeCamera)
 
 
+        self.algo = QToolBar('Algorithm'+name)
+        lbl = QLabel("Image:")
+        self.algo.addWidget(lbl)
+        self.imgCombo = QComboBox()
+        self.imgCombo.addItems([x.name for x in ImageMode])
+        self.algo.addWidget(self.imgCombo)
+        self.algo.addSeparator()
+        lbl = QLabel("Threshold:")
+        self.algo.addWidget(lbl)
+        self.threshSpin = QSpinBox()
+        self.threshSpin.setRange(0, 255)
+        self.algo.addWidget(self.threshSpin)
+
+
+
         vbox = QVBoxLayout()
         vbox.addWidget(self.toolBar)
+        vbox.addWidget(self.algo)
         vbox.addWidget(self.camView)
 
 
@@ -205,6 +221,9 @@ class CameraWidget(QWidget):
         self.camD.erroredOut.connect(self.main.processError)
         self.camD.camConnected.connect(self.cameraInfo.updateCamInfo)
         self.camD.camConnected.connect(self.updateViewToolTip)
+
+        self.imgCombo.currentIndexChanged.connect(self.camD.changeImageMode)
+        self.threshSpin.valueChanged[int].connect(self.camD.changeThreshold)
 
         if(self.camD.state == PGCameraStates.Connected or self.camD.state == PGCameraStates.Streaming):
             self.camPropWidget.setupUI(self.camD, config)
