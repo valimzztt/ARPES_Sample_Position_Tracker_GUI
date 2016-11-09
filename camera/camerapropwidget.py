@@ -384,7 +384,7 @@ class CameraPropertiesWidget(QWidget):
 
 
         for prop in PGCameraProperties:
-            if(prop not in self.properties):
+            if(prop.name not in self.properties):
                 continue
 
             enable = self.properties[prop.name]['on_off']

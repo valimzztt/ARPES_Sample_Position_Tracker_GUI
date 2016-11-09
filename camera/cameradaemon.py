@@ -305,7 +305,7 @@ class PGCameraDaemon(QThread):
         if (self.imageMode == ImageMode.Threshold):
             self.receivedFrame.emit(thresh)
 
-        image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        image, contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         matches = []
         sides = []
         for cnt in contours:

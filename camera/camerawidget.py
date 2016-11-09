@@ -58,6 +58,8 @@ class CameraWidget(QWidget):
         self.main.removeDockWidget(self.camPropDock)
         self.camPropWidget.deleteLater()
 
+        cv2.destroyAllWindows()
+
         CameraWidget.camlist.remove(self)
         QWidget.deleteLater(self)
 

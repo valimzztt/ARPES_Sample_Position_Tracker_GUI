@@ -139,8 +139,6 @@ class ViewfinderWidget(QWidget):
         # rate per second at which camera view is refreshed and re-drawn (since drawing takes time)
         self.FRAME_RATE = 24.0  # anything above 24 is considered smooth motion
 
-    def __del__(self):
-        cv2.destroyAllWindows()
 
     def closeEvent(self, QCloseEvent):
         del self.surface

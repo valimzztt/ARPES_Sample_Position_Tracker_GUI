@@ -51,7 +51,7 @@ class MainWindow(QMainWindow):
         self.loadSettings()
         # self.setupCamDaemon()
         self.setObjectName('MainWindow')
-        self.setWindowTitle('XUV Control Application')
+        self.setWindowTitle('CV Sampler Application')
 
 
         # time.sleep(self.STARTUP_TIME)
@@ -94,8 +94,8 @@ class MainWindow(QMainWindow):
 
 
     def about(self):
-        QMessageBox.about(self, "About XUV Control Application",
-                          "This application controls experimental devices important for XUV Laser spectroscopy in David Jone's Lab.");
+        QMessageBox.about(self, "About CV Sampler Application",
+                          "This application identifies a mineral sample in the vacuum chamber for the Arpes group experiments.");
 
 
     @pyqtSlot(str, ErrorPriority)
@@ -156,6 +156,11 @@ class MainWindow(QMainWindow):
         saveConfig = settings.value("saveConfig", "true") == 'true'
         settings.endGroup()
 
+        settings.beginGroup("Cameras")
+        camlist = [cam.name for cam in CameraWidget.camlist]
+        settings.setValue('List', camlist)
+        settings.endGroup()
+
         if(saveGeo):
             settings.beginGroup("MainWindow")
             settings.setValue("geometry", self.saveGeometry())
@@ -173,8 +178,7 @@ class MainWindow(QMainWindow):
                     settings.beginGroup("CamProps")
                     for camWidget in CameraWidget.camlist:
                         props = camWidget.camPropWidget.properties
-                        arr = pickle.dumps(props)
-                        settings.setValue("props", arr)
+                        settings.setValue("props", props)
                     settings.endGroup()
 
             if saveConfig:
@@ -200,10 +204,9 @@ class MainWindow(QMainWindow):
         settings.endGroup()
 
         settings.beginGroup("Cameras")
-        arr = settings.value('List')
+        camlist = settings.value('List')
 
-        if arr:
-            camlist = pickle.loads(arr)
+        if camlist:
             for name in camlist:
                 cameraWidget = CameraWidget(self, name)
                 camDock = QDockWidget(cameraWidget.objectName(), self)
@@ -216,6 +219,7 @@ class MainWindow(QMainWindow):
             camDock.setWidget(self.cameraWidget)
             camDock.setObjectName(self.cameraWidget.objectName())
             self.addDockWidget(Qt.RightDockWidgetArea, camDock)
+
         settings.endGroup()
 
         if saveGeo:
@@ -247,9 +251,8 @@ class MainWindow(QMainWindow):
 
             if saveProps and camWidget.camPropWidget.initialized:
                 settings.beginGroup("CamProps")
-                arr = settings.value("props")
-                if arr:
-                    props = pickle.loads(arr)
+                props = settings.value("props")
+                if props:
                     camWidget.camPropWidget.properties = props
                     camWidget.camPropWidget.setAllProperties()
                     camWidget.camPropWidget.revertSavedProperties()
