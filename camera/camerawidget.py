@@ -189,13 +189,24 @@ class CameraWidget(QWidget):
         self.algo.addWidget(lbl)
         self.imgCombo = QComboBox()
         self.imgCombo.addItems([x.name for x in ImageMode])
+        self.imgCombo.setToolTip("Choose display image:\n0 - Processed image with sample highlighted\n1 - Original Image\n2 - Image with thresholding applied")
         self.algo.addWidget(self.imgCombo)
         self.algo.addSeparator()
         lbl = QLabel("Threshold:")
         self.algo.addWidget(lbl)
         self.threshSpin = QSpinBox()
         self.threshSpin.setRange(0, 255)
+        self.threshSpin.setToolTip("Adjust threshold")
+        self.threshSpin.setValue(60)
         self.algo.addWidget(self.threshSpin)
+        self.algo.addSeparator()
+        lbl = QLabel("Area Buffer:")
+        self.algo.addWidget(lbl)
+        self.areaSpin = QDoubleSpinBox()
+        self.areaSpin.setRange(0, 1000)
+        self.areaSpin.setToolTip("Adjust sample area detection allowance")
+        self.areaSpin.setValue(100)
+        self.algo.addWidget(self.areaSpin)
 
 
 
@@ -224,8 +235,11 @@ class CameraWidget(QWidget):
         self.camD.camConnected.connect(self.cameraInfo.updateCamInfo)
         self.camD.camConnected.connect(self.updateViewToolTip)
 
+
         self.imgCombo.currentIndexChanged.connect(self.camD.changeImageMode)
         self.threshSpin.valueChanged[int].connect(self.camD.changeThreshold)
+        self.areaSpin.valueChanged[float].connect(self.camD.changeAreaBuffer)
+        self.camView.sampleClicked.connect(self.camD.setSample)
 
         if(self.camD.state == PGCameraStates.Connected or self.camD.state == PGCameraStates.Streaming):
             self.camPropWidget.setupUI(self.camD, config)

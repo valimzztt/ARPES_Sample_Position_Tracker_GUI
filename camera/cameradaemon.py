@@ -79,6 +79,9 @@ class PGCameraDaemon(QThread):
         self.data = dict() # data for plotting
 
         self.threshold = 60
+        self.area = 500
+        self.areaBuffer = 100
+        self.aspect_ratio = 1
         self.imageMode = ImageMode.Processed
 
         self.context = fc2.Context()
@@ -305,22 +308,22 @@ class PGCameraDaemon(QThread):
         if (self.imageMode == ImageMode.Threshold):
             self.receivedFrame.emit(thresh)
 
-        image, contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        image, self.contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         matches = []
         sides = []
-        for cnt in contours:
+        for cnt in self.contours:
 
             area = cv2.contourArea(cnt)
             # print(area)
 
-            if (area > 100 and area < 1000):
+            if (abs(area - self.area) <= self.areaBuffer):
                 x, y, w, h = cv2.boundingRect(cnt)
                 aspect_ratio = float(w) / h
                 # print(aspect_ratio)
 
-                diff_to_square = abs(aspect_ratio - 1)
+                diff_to_sample = abs(aspect_ratio - self.aspect_ratio)
 
-                if (diff_to_square < 0.5):
+                if (diff_to_sample < 0.5):
                     matches.append(cnt)
             elif (area > 12000):
                 image = cv2.drawContours(image, [cnt], 0, (255, 255, 255), 3)
@@ -355,5 +358,22 @@ class PGCameraDaemon(QThread):
     @pyqtSlot(int)
     def changeThreshold(self, thresh):
         self.threshold = thresh
+
+    @pyqtSlot(int, int)
+    def setSample(self, sample_x, sample_y):
+        # Find the contour under the mouse click and extract relevant parameters from it
+        for cnt in self.contours:
+            x, y, w, h = cv2.boundingRect(cnt)
+
+            if(sample_x > x and sample_x < x+w and sample_y > y and sample_y < y+h):
+                area = cv2.contourArea(cnt)
+                self.area = area
+                self.aspect_ratio = float(w) / h
+                return
+
+
+    @pyqtSlot(float)
+    def changeAreaBuffer(self, areabuffer):
+        self.areaBuffer = areabuffer
 
     _monitorForErrors = staticmethod(_monitorForErrors)

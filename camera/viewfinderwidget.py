@@ -121,6 +121,8 @@ class ViewfinderWidget(QWidget):
     """"
     This class is the widget that holds the viewport into the camera
     """
+    sampleClicked = pyqtSignal(int, int)
+
     # time in ms to wait before restarting the stream
     RESTART_TIME = 1
 
@@ -190,6 +192,7 @@ class ViewfinderWidget(QWidget):
         name = camWidget.objectName()
 
         cv2.namedWindow(name, cv2.WINDOW_NORMAL)
+        cv2.setMouseCallback(name, self.cvSampleClicked)
         cv2.imshow(name, frame)
 
         # construct QImage
@@ -240,4 +243,8 @@ class ViewfinderWidget(QWidget):
         if(not writer.write(self.currImg)):
             self.erroredOut.emit("Cannot write image. " + writer.errorString(), ErrorPriority.Notice)
 
+
+    def cvSampleClicked(self, event,x,y,flags,param):
+        if event == cv2.EVENT_LBUTTONDBLCLK:
+            self.sampleClicked.emit(x, y)
 
