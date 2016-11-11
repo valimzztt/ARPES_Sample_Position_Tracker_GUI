@@ -13,12 +13,12 @@ This class implements the specifications for QAbstractVideoSurface
 """
 class VideoWidgetSurface(QAbstractVideoSurface):
 
-    def __init__(self, widget):
+    def __init__(self, widget, parent = None):
         self.widget = widget
         # default is a blank screen
         self.currentFrame = QVideoFrame()
         self.targetRect = QRect()
-        super().__init__()
+        super().__init__(parent=parent)
 
     """
     From the supportedPixelFormats() function we return a list of pixel formats the surface can paint. The order of the list hints at which formats are preferred by the surface.
@@ -47,7 +47,7 @@ class VideoWidgetSurface(QAbstractVideoSurface):
         imageFormat = QVideoFrame.imageFormatFromPixelFormat(format.pixelFormat())
         size = format.frameSize()
 
-        return imageFormat != QImage.Format_Invalid and not size.isEmpty() and format.handleType() == QAbstractVideoBuffer.NoHandle
+        return imageFormat != QImage.Format_Invalid and (not size.isEmpty()) and format.handleType() == QAbstractVideoBuffer.NoHandle
 
     def start(self, format):
         imageFormat = QVideoFrame.imageFormatFromPixelFormat(format.pixelFormat())
@@ -62,6 +62,10 @@ class VideoWidgetSurface(QAbstractVideoSurface):
 
             self.widget.updateGeometry()
             self.updateVideoRect()
+
+            return True
+        else:
+            return False
 
     def updateVideoRect(self):
         size = self.surfaceFormat().sizeHint()
@@ -132,9 +136,11 @@ class ViewfinderWidget(QWidget):
         super().__init__(parent)
         self.setAutoFillBackground(False)
         self.setAttribute(Qt.WA_NoSystemBackground, True)
-        self.setAttribute(Qt.WA_PaintOnScreen, True)
+        # self.setAttribute(Qt.WA_PaintOnScreen, True)
         palette = self.palette()
         palette.setColor(QPalette.Background, Qt.black)
+        self.setPalette(palette)
+
         self.surface = VideoWidgetSurface(self)
         self.lastShowTime = time.time()
 
