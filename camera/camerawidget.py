@@ -46,6 +46,8 @@ class CameraWidget(QWidget):
 
 
     def deleteLater(self):
+        self.camD.stop = True
+        self.camD.wait(msecs=500)
         self.camD.disconnect()
         self.camD.deleteLater()
 
@@ -57,8 +59,6 @@ class CameraWidget(QWidget):
 
         self.main.removeDockWidget(self.camPropDock)
         self.camPropWidget.deleteLater()
-
-        cv2.destroyAllWindows()
 
         CameraWidget.camlist.remove(self)
         QWidget.deleteLater(self)

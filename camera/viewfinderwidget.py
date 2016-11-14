@@ -192,15 +192,6 @@ class ViewfinderWidget(QWidget):
         if (time.time() - self.lastShowTime < 1.0/self.FRAME_RATE):
             return
 
-        #TODO remove when better solution is found
-        camD = self.sender()
-        camWidget = camD.parent()
-        name = camWidget.objectName()
-
-        cv2.namedWindow(name, cv2.WINDOW_NORMAL)
-        cv2.setMouseCallback(name, self.cvSampleClicked)
-        cv2.imshow(name, frame)
-
         # construct QImage
         qIm = QImage(frame, frame.shape[1], frame.shape[0], QImage.Format_RGB888)
 
@@ -250,7 +241,8 @@ class ViewfinderWidget(QWidget):
             self.erroredOut.emit("Cannot write image. " + writer.errorString(), ErrorPriority.Notice)
 
 
-    def cvSampleClicked(self, event,x,y,flags,param):
-        if event == cv2.EVENT_LBUTTONDBLCLK:
-            self.sampleClicked.emit(x, y)
-
+    def mouseDoubleClickEvent(self, event):
+        videoRect = self.surface.videoRect()
+        x, y = (event.x() - videoRect.x(), event.y() - videoRect.y())
+        scaled_x, scaled_y = (int(x*self.currImg.width()/videoRect.width()), int(y*self.currImg.height()/videoRect.height()))
+        self.sampleClicked.emit(scaled_x, scaled_y)
