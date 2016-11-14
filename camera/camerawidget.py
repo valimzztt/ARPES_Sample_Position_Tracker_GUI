@@ -1,7 +1,7 @@
 import time
 
 from PyQt5.QtCore import Qt, QSize, pyqtSlot, QTimer
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QCursor
 from PyQt5.QtMultimedia import QVideoSurfaceFormat, QVideoFrame
 from PyQt5.QtWidgets import *
 from camera.cameraconfigwidget import *
@@ -86,6 +86,7 @@ class CameraWidget(QWidget):
         self.cameraConfigWidget.erroredOut.connect(self.main.processError)
         self.cameraConfigWidget.cameraConfigChanged.connect(self.changeCameraConfig)
 
+
     def setupView(self):
         self.camView = ViewfinderWidget(self)
 
@@ -95,7 +96,21 @@ class CameraWidget(QWidget):
         else:
             name = ''
 
-        self.toolBar = QToolBar('Camera'+ name)
+        self.setupCameraToolbar(name)
+
+        self.setupAlgorithmToolbar(name)
+
+        vbox = QVBoxLayout()
+        vbox.addWidget(self.toolBar)
+        vbox.addWidget(self.algo)
+        vbox.addWidget(self.camView)
+
+
+        self.setLayout(vbox)
+
+
+    def setupCameraToolbar(self, name):
+        self.toolBar = QToolBar('Camera' + name)
         lbl = QLabel("<b>Camera Controls</b>:")
         self.toolBar.addWidget(lbl)
         playIcon = QIcon('resources/button_blue_play.png')
@@ -106,30 +121,29 @@ class CameraWidget(QWidget):
         self.stopAct.setToolTip("Stop camera stream")
         self.toolBar.addAction(self.playAct)
         self.toolBar.addAction(self.stopAct)
+
         camPropIcon = QIcon('resources/aperture.png')
         self.toggleCamPropAct = self.camPropDock.toggleViewAction()
         self.toggleCamPropAct.setIcon(camPropIcon)
         self.toggleCamPropAct.setToolTip("Show/Hide Camera Properties")
         self.toolBar.addAction(self.toggleCamPropAct)
         self.toolBar.addSeparator()
-        self.toolBar.setObjectName("Camera Controls" + name)
 
+        self.toolBar.setObjectName("Camera Controls" + name)
         self.statusIcons = dict()
         self.statusIcons['Streaming'] = ('resources/status_green.png')
         self.statusIcons['Connected'] = ('resources/status_away.png')
         self.statusIcons['Disconnected'] = ('resources/status_offline.png')
         self.statusIcons['Invalid'] = ('resources/status_busy.png')
-
         self.camStatusLbl = QLabel()
         self.camStatusLbl.setText("<b>Status</b>:    Disconnected")
         self.toolBar.addWidget(self.camStatusLbl)
-
         self.camStatusIcon = QLabel()
         self.camStatusIcon.setTextFormat(Qt.RichText)
         self.camStatusIcon.setText("<img src=\"" + self.statusIcons['Disconnected'] + "\">")
         self.toolBar.addWidget(self.camStatusIcon)
-
         self.toolBar.addSeparator()
+
         lbl = QLabel("<b>Camera Configuration:</b>")
         self.toolBar.addWidget(lbl)
         camRestartIcon = QIcon('resources/camera_reload.png')
@@ -141,8 +155,8 @@ class CameraWidget(QWidget):
         self.toggleCamConfigAct.setIcon(camConfigIcon)
         self.toggleCamConfigAct.setToolTip("Show/Hide Camera Configuration")
         self.toolBar.addAction(self.toggleCamConfigAct)
-
         self.toolBar.addSeparator()
+
         lbl = QLabel("<b>Camera Info:</b>")
         self.toolBar.addWidget(lbl)
         camInfoIcon = QIcon('resources/camera_info.png')
@@ -150,19 +164,18 @@ class CameraWidget(QWidget):
         self.toggleCamInfoAct.setIcon(camInfoIcon)
         self.toggleCamInfoAct.setToolTip("Show/Hide Camera Info")
         self.toolBar.addAction(self.toggleCamInfoAct)
-
         self.toolBar.addSeparator()
+
         camSaveIcon = QIcon('resources/save.png')
         self.camSaveAct = QAction(camSaveIcon, "Save Image", self)
         self.camSaveAct.setToolTip("Save current frame")
         self.toolBar.addAction(self.camSaveAct)
-
         self.playAct.triggered.connect(self.startStreaming)
         self.stopAct.triggered.connect(self.stopStreaming)
         self.restartCamAct.triggered.connect(self.restartCamStream)
         self.camSaveAct.triggered.connect(self.camView.saveCurrentFrame)
-
         self.toolBar.addSeparator()
+
         empty = QWidget()
         empty.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.toolBar.addWidget(empty)
@@ -184,12 +197,14 @@ class CameraWidget(QWidget):
             self.removeCameraRequested.connect(self.main.removeCamera)
 
 
-        self.algo = QToolBar('Algorithm'+name)
+    def setupAlgorithmToolbar(self, name):
+        self.algo = QToolBar('Algorithm' + name)
         lbl = QLabel("Image:")
         self.algo.addWidget(lbl)
         self.imgCombo = QComboBox()
         self.imgCombo.addItems([x.name for x in ImageMode])
-        self.imgCombo.setToolTip("Choose display image:\n0 - Processed image with sample highlighted\n1 - Original Image\n2 - Image with thresholding applied")
+        self.imgCombo.setToolTip(
+            "Choose display image:\n0 - Processed image with sample highlighted\n1 - Original Image\n2 - Image with thresholding applied")
         self.algo.addWidget(self.imgCombo)
         self.algo.addSeparator()
         lbl = QLabel("Threshold:")
@@ -207,16 +222,13 @@ class CameraWidget(QWidget):
         self.areaSpin.setToolTip("Adjust sample area detection allowance")
         self.areaSpin.setValue(100)
         self.algo.addWidget(self.areaSpin)
-
-
-
-        vbox = QVBoxLayout()
-        vbox.addWidget(self.toolBar)
-        vbox.addWidget(self.algo)
-        vbox.addWidget(self.camView)
-
-
-        self.setLayout(vbox)
+        self.algo.addSeparator()
+        sampleIcon = QIcon('resources/cursorclick.png')
+        self.selectSampleAct = QAction(sampleIcon, 'Select Sample', self)
+        self.selectSampleAct.setToolTip("Select sample for algorithm")
+        self.selectSampleAct.setCheckable(True)
+        self.algo.addAction(self.selectSampleAct)
+        self.selectSampleAct.toggled.connect(self.selectSample)
 
 
     def setupCamDaemon(self):
@@ -348,3 +360,13 @@ class CameraWidget(QWidget):
     def updateViewToolTip(self, *args, **kwargs):
         self.camView.setToolTip(self.cameraInfo.getRichText())
 
+    @pyqtSlot(bool)
+    def selectSample(self, checked):
+        if checked:
+            cursor = QCursor()
+            cursor.setShape(Qt.PointingHandCursor)
+            self.camView.setCursor(cursor)
+        else:
+            cursor = QCursor()
+            cursor.setShape(Qt.ArrowCursor)
+            self.camView.setCursor(cursor)

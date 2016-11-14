@@ -241,8 +241,13 @@ class ViewfinderWidget(QWidget):
             self.erroredOut.emit("Cannot write image. " + writer.errorString(), ErrorPriority.Notice)
 
 
-    def mouseDoubleClickEvent(self, event):
-        videoRect = self.surface.videoRect()
-        x, y = (event.x() - videoRect.x(), event.y() - videoRect.y())
-        scaled_x, scaled_y = (int(x*self.currImg.width()/videoRect.width()), int(y*self.currImg.height()/videoRect.height()))
-        self.sampleClicked.emit(scaled_x, scaled_y)
+    def mousePressEvent(self, event):
+        camView = self.parent()
+        if camView.selectSampleAct.isChecked():
+            videoRect = self.surface.videoRect()
+            x, y = (event.x() - videoRect.x(), event.y() - videoRect.y())
+            scaled_x, scaled_y = (int(x*self.currImg.width()/videoRect.width()), int(y*self.currImg.height()/videoRect.height()))
+            self.sampleClicked.emit(scaled_x, scaled_y)
+            camView.selectSampleAct.toggle()
+        else:
+            return
