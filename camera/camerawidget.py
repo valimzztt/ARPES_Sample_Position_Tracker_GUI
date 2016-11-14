@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import *
 from camera.cameraconfigwidget import *
 from camera.cameradaemon import *
 from camera.camerainfowidget import CameraInfoWidget
-
+from camera.algorithmLabel import *
 from camera.camerapropwidget import CameraPropertiesWidget
 from camera.viewfinderwidget import ViewfinderWidget
 
@@ -60,6 +60,9 @@ class CameraWidget(QWidget):
         self.main.removeDockWidget(self.camPropDock)
         self.camPropWidget.deleteLater()
 
+        self.main.removeDockWidget(self.algoDock)
+        self.algoLabel.deleteLater()
+
         CameraWidget.camlist.remove(self)
         QWidget.deleteLater(self)
 
@@ -82,6 +85,12 @@ class CameraWidget(QWidget):
         self.camPropDock.setWidget(self.camPropWidget)
         self.camPropDock.setObjectName("Camera Properties" + self.addStr)
         self.main.addDockWidget(Qt.RightDockWidgetArea, self.camPropDock)
+
+        self.algoLabel = AlgorithmLabel(self)
+        self.algoDock = QDockWidget("Algorithm Data" + self.addStr, self)
+        self.algoDock.setWidget(self.algoLabel)
+        self.algoDock.setObjectName("Algorithm Data" + self.addStr)
+        self.main.addDockWidget(Qt.RightDockWidgetArea, self.algoDock)
 
         self.cameraConfigWidget.erroredOut.connect(self.main.processError)
         self.cameraConfigWidget.cameraConfigChanged.connect(self.changeCameraConfig)
@@ -234,8 +243,6 @@ class CameraWidget(QWidget):
     def setupCamDaemon(self):
         config = self.cameraConfigWidget.cam_config
 
-        format = QVideoSurfaceFormat(QSize(config['cam_w'], config['cam_h']), QVideoFrame.Format_RGB24)
-
         self.camD = PGCameraDaemon(parent=self, **config,
                               cam_pixformat=fc2.PIXEL_FORMAT_RGB8)
 
@@ -252,6 +259,7 @@ class CameraWidget(QWidget):
         self.threshSpin.valueChanged[int].connect(self.camD.changeThreshold)
         self.areaSpin.valueChanged[float].connect(self.camD.changeAreaBuffer)
         self.camView.sampleClicked.connect(self.camD.setSample)
+        self.camD.sampleDetected.connect(self.algoLabel.displayData)
 
         if(self.camD.state == PGCameraStates.Connected or self.camD.state == PGCameraStates.Streaming):
             self.camPropWidget.setupUI(self.camD, config)

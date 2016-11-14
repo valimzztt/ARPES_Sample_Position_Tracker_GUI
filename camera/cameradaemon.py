@@ -37,6 +37,7 @@ class PGCameraDaemon(QThread):
     stateChanged = pyqtSignal(PGCameraStates, PGCameraStates)
     camConnected = pyqtSignal(dict)
     frameProcessed = pyqtSignal(dict)
+    sampleDetected = pyqtSignal(int, int, int, int, int)
 
     ERROR_COUNT_LIMIT = 10 #TODO set to frame rate limit
 
@@ -332,19 +333,22 @@ class PGCameraDaemon(QThread):
             x1, y1, w1, h1 = cv2.boundingRect(sides[0])
             x2, y2, w2, h2 = cv2.boundingRect(sides[1])
 
-            # print(x1)
-            # print(x2)
-
             for cnt in matches:
                 x, y, w, h = cv2.boundingRect(cnt)
-                # print(x)
+
+                # if sample candidate between the shields
                 if (x1 < x2 and x1 <= x <= x2) or (x2 < x1 and x2 <= x <= x1):
+                    area = cv2.contourArea(cnt)
+                    self.sampleDetected.emit(int(x+w/2), int(y+h/2), w, h, area)
                     image = cv2.drawContours(image, [cnt], 0, (255, 255, 255), 3)
                     img = cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
         else:
             for cnt in matches:
                 x, y, w, h = cv2.boundingRect(cnt)
+                area = cv2.contourArea(cnt)
+
+                self.sampleDetected.emit(int(x+w/2), int(y+h/2), w, h, area)
 
                 image = cv2.drawContours(image, [cnt], 0, (255, 255, 255), 3)
                 img = cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
