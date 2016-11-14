@@ -88,7 +88,7 @@ class MainWindow(QMainWindow):
 
     def removeDockWidget(self, dockwidget):
         dockwidget.hide()
-        QMainWindow.removeDockWidget(self, dockwidget)
+        # QMainWindow.removeDockWidget(self, dockwidget)
         self.docks.remove(dockwidget)
         self.viewMenu.removeAction(dockwidget.toggleViewAction())
 
