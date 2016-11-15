@@ -96,6 +96,9 @@ Useful info:
 Install both Qt and PyQt5 from this website:
 - https://www.riverbankcomputing.com/software/pyqt/download5
 
+## Open CV
+To install Open CV, follow these steps on this link (if you are using Linux, if not there are other tutorials by the same author): <http://www.pyimagesearch.com/2016/10/24/ubuntu-16-04-how-to-install-opencv/>
+
 ## PyCharm
 PyCharm is a fantastic IDE from Jetbrains which integrates well with the Anaconda package, Git, and generally is one of the best IDE's out there. Use of PyCharm is completely optional, but recommended.
 
