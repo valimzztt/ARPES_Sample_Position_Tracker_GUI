@@ -81,9 +81,8 @@ class PGCameraDaemon(QThread):
 
         self.lowThreshold = 60
         self.highThreshold = 255
-        self.area = 500
-        self.areaBuffer = 100
-        self.aspect_ratio = 1
+        self.sampleDiff = 0.05
+        self.sample = None
         self.imageMode = ImageMode.Processed
 
         self.context = fc2.Context()
@@ -313,48 +312,23 @@ class PGCameraDaemon(QThread):
             self.receivedFrame.emit(np.stack([thresh, thresh, thresh], axis=2))
 
         image, self.contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        matches = []
-        sides = []
+
+        # if sample not yet set, return
+        if (self.sample is None):
+            return img
+
         for cnt in self.contours:
 
-            area = cv2.contourArea(cnt)
-            # print(area)
+            difference = cv2.matchShapes(cnt, self.sample, 1, 0.0)
 
-            if (abs(area - self.area) <= self.areaBuffer):
-                x, y, w, h = cv2.boundingRect(cnt)
-                aspect_ratio = float(w) / h
-                # print(aspect_ratio)
-
-                diff_to_sample = abs(aspect_ratio - self.aspect_ratio)
-
-                if (diff_to_sample < 0.5):
-                    matches.append(cnt)
-            elif (area > 12000):
-                image = cv2.drawContours(image, [cnt], 0, (255, 255, 255), 3)
-                sides.append(cnt)
-        if len(sides) == 2:
-            x1, y1, w1, h1 = cv2.boundingRect(sides[0])
-            x2, y2, w2, h2 = cv2.boundingRect(sides[1])
-
-            for cnt in matches:
+            if (difference <= self.sampleDiff):
                 x, y, w, h = cv2.boundingRect(cnt)
 
-                # if sample candidate between the shields
-                if (x1 < x2 and x1 <= x <= x2) or (x2 < x1 and x2 <= x <= x1):
-                    area = cv2.contourArea(cnt)
-                    self.sampleDetected.emit(int(x+w/2), int(y+h/2), w, h, area)
-                    image = cv2.drawContours(image, [cnt], 0, (255, 255, 255), 3)
-                    img = cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-
-        else:
-            for cnt in matches:
-                x, y, w, h = cv2.boundingRect(cnt)
-                area = cv2.contourArea(cnt)
-
-                self.sampleDetected.emit(int(x+w/2), int(y+h/2), w, h, area)
+                self.sampleDetected.emit(int(x + w / 2), int(y + h / 2), w, h, difference)
 
                 image = cv2.drawContours(image, [cnt], 0, (255, 255, 255), 3)
                 img = cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
         return img
 
 
@@ -377,14 +351,12 @@ class PGCameraDaemon(QThread):
             x, y, w, h = cv2.boundingRect(cnt)
 
             if(sample_x > x and sample_x < x+w and sample_y > y and sample_y < y+h):
-                area = cv2.contourArea(cnt)
-                self.area = area
-                self.aspect_ratio = float(w) / h
+                self.sample = cnt
                 return
 
 
     @pyqtSlot(float)
-    def changeAreaBuffer(self, areabuffer):
-        self.areaBuffer = areabuffer
+    def changeSampleDiff(self, diffPercent):
+        self.sampleDiff = diffPercent / 100
 
     _monitorForErrors = staticmethod(_monitorForErrors)

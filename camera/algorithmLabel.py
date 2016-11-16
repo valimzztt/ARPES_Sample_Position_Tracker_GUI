@@ -54,14 +54,14 @@ class AlgorithmLabel(QWidget):
 
 
     @pyqtSlot(int, int ,int ,int, int)
-    def displayData(self, x, y, w, h, area):
+    def displayData(self, x, y, w, h, difference):
         displayText = ""
 
         displayText += "<b>X:</b>" + str(x) + "\n"
         displayText += "<b>Y:</b>" + str(y) + "\n"
         displayText += "<b>W:</b>" + str(w) + "\n"
         displayText += "<b>H:</b>" + str(h) + "\n"
-        displayText += "<b>Area:</b>" + str(area) + "\n"
+        displayText += "<b>Difference:</b>" + str(difference) + "\n"
 
         if len(self.x) < self.MEAN_LEN:
             self.x.append(x)
