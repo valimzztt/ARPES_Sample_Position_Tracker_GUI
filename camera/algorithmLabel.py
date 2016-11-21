@@ -17,24 +17,28 @@ class AlgorithmLabel(QWidget):
         self.x1lbl = QLabel()
         self.x1lbl.setText('X1:')
         self.x1box = QDoubleSpinBox()
+        self.x1box.setRange(1, 1000)
         self.hbox.addWidget(self.x1lbl)
         self.hbox.addWidget(self.x1box)
 
         self.x2lbl = QLabel()
         self.x2lbl.setText('X2:')
         self.x2box = QDoubleSpinBox()
+        self.x2box.setRange(1, 1000)
         self.hbox.addWidget(self.x2lbl)
         self.hbox.addWidget(self.x2box)
 
         self.y1lbl = QLabel()
         self.y1lbl.setText('Y1:')
         self.y1box = QDoubleSpinBox()
+        self.y1box.setRange(1, 1000)
         self.hbox.addWidget(self.y1lbl)
         self.hbox.addWidget(self.y1box)
 
         self.y2lbl = QLabel()
         self.y2lbl.setText('Y2:')
         self.y2box = QDoubleSpinBox()
+        self.y2box.setRange(1, 1000)
         self.hbox.addWidget(self.y2lbl)
         self.hbox.addWidget(self.y2box)
 
@@ -67,7 +71,7 @@ class AlgorithmLabel(QWidget):
         if len(self.y) < self.MEAN_LEN:
             self.y.append(x)
         else:
-            self.y = self.y[1:]
+            self.y.pop(0)
             self.y.append(y)
 
         meanX = sum(self.x)/len(self.x)
@@ -76,9 +80,10 @@ class AlgorithmLabel(QWidget):
         displayText += "<b>Mean X:</b>" + str(meanX) + "\n"
         displayText += "<b>Mean Y:</b>" + str(meanY) + "\n"
 
-        Ypos = ((self.y2box.value()-self.y1box.value())/(self.x2box.value()-self.x1box.value()))*(meanX-self.x1box.value()) + self.y1box.value()
+        if(self.x2box.value() - self.x1box.value() != 0):
+            Ypos = ((self.y2box.value()-self.y1box.value())/(self.x2box.value()-self.x1box.value()))*(meanX-self.x1box.value()) + self.y1box.value()
 
-        displayText += "<b>Y-Pos:</b>" + str(Ypos)
+            displayText += "<b>Y-Pos:</b>" + str(Ypos)
 
 
         self.text.setText(displayText)

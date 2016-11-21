@@ -79,7 +79,8 @@ class PGCameraDaemon(QThread):
 
         self.data = dict() # data for plotting
 
-        self.threshold = 60
+        self.lowThreshold = 60
+        self.highThreshold = 100
         self.area = 500
         self.areaBuffer = 100
         self.aspect_ratio = 1
@@ -304,7 +305,9 @@ class PGCameraDaemon(QThread):
         # Our operations on the frame come here
         gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         gray = cv2.medianBlur(gray, 9)
-        ret, thresh = cv2.threshold(gray, self.threshold, 255, cv2.THRESH_BINARY)
+        ret, thresh = cv2.threshold(gray, self.lowThreshold, 255, cv2.THRESH_TOZERO)
+        ret, thresh = cv2.threshold(thresh, self.highThreshold, 255, cv2.THRESH_TOZERO_INV)
+        ret, thresh = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY)
 
         if (self.imageMode == ImageMode.Threshold):
             self.receivedFrame.emit(np.stack([thresh, thresh, thresh], axis=2))
@@ -360,8 +363,12 @@ class PGCameraDaemon(QThread):
         self.imageMode = ImageMode(mode)
 
     @pyqtSlot(int)
-    def changeThreshold(self, thresh):
-        self.threshold = thresh
+    def setLowThreshold(self, thresh):
+        self.lowThreshold = thresh
+
+    @pyqtSlot(int)
+    def setHighThreshold(self, thresh):
+        self.highThreshold = thresh
 
     @pyqtSlot(int, int)
     def setSample(self, sample_x, sample_y):
