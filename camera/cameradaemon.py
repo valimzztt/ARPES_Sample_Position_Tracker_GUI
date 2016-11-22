@@ -83,6 +83,7 @@ class PGCameraDaemon(QThread):
         self.highThreshold = 255
         self.sampleDiff = 0.05
         self.sample = None
+        self.areaAllowance = 100
         self.imageMode = ImageMode.Processed
 
         self.context = fc2.Context()
@@ -320,8 +321,10 @@ class PGCameraDaemon(QThread):
         for cnt in self.contours:
 
             difference = cv2.matchShapes(cnt, self.sample, 1, 0.0)
+            area = cv2.contourArea(cnt)
+            sampleArea = cv2.contourArea(self.sample)
 
-            if (difference <= self.sampleDiff):
+            if (difference <= self.sampleDiff and abs(area - sampleArea) <= self.areaAllowance):
                 x, y, w, h = cv2.boundingRect(cnt)
 
                 self.sampleDetected.emit(int(x + w / 2), int(y + h / 2), w, h, difference)
@@ -358,5 +361,9 @@ class PGCameraDaemon(QThread):
     @pyqtSlot(float)
     def changeSampleDiff(self, diffPercent):
         self.sampleDiff = diffPercent / 100
+
+    @pyqtSlot(float)
+    def changeAreaAllowance(self, areaAllowance):
+        self.areaAllowance = areaAllowance
 
     _monitorForErrors = staticmethod(_monitorForErrors)
