@@ -92,6 +92,7 @@ class CameraWidget(QWidget):
         self.algoDock.setObjectName("Algorithm Data" + self.addStr)
         self.main.addDockWidget(Qt.RightDockWidgetArea, self.algoDock)
 
+        self.algoLabel.erroredOut.connect(self.main.processError)
         self.cameraConfigWidget.erroredOut.connect(self.main.processError)
         self.cameraConfigWidget.cameraConfigChanged.connect(self.changeCameraConfig)
 
@@ -229,7 +230,7 @@ class CameraWidget(QWidget):
         self.highThreshSpin = QSpinBox()
         self.highThreshSpin.setRange(0, 255)
         self.highThreshSpin.setToolTip("Adjust higher threshold")
-        self.highThreshSpin.setValue(100)
+        self.highThreshSpin.setValue(255)
         self.algo.addWidget(self.highThreshSpin)
         self.algo.addSeparator()
         lbl = QLabel("Area Buffer:")

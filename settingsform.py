@@ -11,7 +11,7 @@ class ErrorHandlingModes(Enum):
 
 
 class SettingsDialog(QDialog):
-    def __init__(self, errorMode=ErrorHandlingModes.Default.value, saveGeometryOnClose=True, saveCameraPropertiesOnClose=True, saveConfigOnClose=True, parent=0):
+    def __init__(self, errorMode=ErrorHandlingModes.Default.value, repeatError=False, saveGeometryOnClose=True, saveCameraPropertiesOnClose=True, saveConfigOnClose=True, parent=0):
         QDialog.__init__(self, parent)
 
         mainLayout = QVBoxLayout()
@@ -26,6 +26,9 @@ class SettingsDialog(QDialog):
                                    "<b>Quiet:</b> no dialog box is shown for any error, it is printed instead\n"
                                    "<b>Disabled:</b> errors are completely ignored")
         errorVBox.addWidget(self.errorCombo)
+        self.errorRepeatCheck = QCheckBox("Repeat Error Messages?")
+        self.errorRepeatCheck.setChecked(repeatError)
+        errorVBox.addWidget(self.errorRepeatCheck)
         errorGB.setLayout(errorVBox)
         mainLayout.addWidget(errorGB)
 

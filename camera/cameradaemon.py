@@ -80,7 +80,7 @@ class PGCameraDaemon(QThread):
         self.data = dict() # data for plotting
 
         self.lowThreshold = 60
-        self.highThreshold = 100
+        self.highThreshold = 255
         self.area = 500
         self.areaBuffer = 100
         self.aspect_ratio = 1

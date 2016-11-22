@@ -1,9 +1,10 @@
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt, pyqtSlot
-
+from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
+from utilities import ErrorPriority
 import numpy as np
 
 class AlgorithmLabel(QWidget):
+    erroredOut = pyqtSignal(str, ErrorPriority)
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -49,7 +50,7 @@ class AlgorithmLabel(QWidget):
 
         self.x = []
         self.y = []
-        self.MEAN_LEN = 10
+        self.MEAN_LEN = 5
 
 
     @pyqtSlot(int, int ,int ,int, int)
@@ -80,10 +81,13 @@ class AlgorithmLabel(QWidget):
         displayText += "<b>Mean X:</b>" + str(meanX) + "\n"
         displayText += "<b>Mean Y:</b>" + str(meanY) + "\n"
 
-        if(self.x2box.value() - self.x1box.value() != 0):
+        try:
             Ypos = ((self.y2box.value()-self.y1box.value())/(self.x2box.value()-self.x1box.value()))*(meanX-self.x1box.value()) + self.y1box.value()
 
             displayText += "<b>Y-Pos:</b>" + str(Ypos)
+        except ZeroDivisionError as e:
+            self.erroredOut.emit("Invalid calibration coordinates. Please check calibration coordinates. X corresponds to X-pixels, Y corresponds to real Y-dimension.", ErrorPriority.Warning)
+
 
 
         self.text.setText(displayText)

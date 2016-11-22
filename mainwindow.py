@@ -39,6 +39,7 @@ class MainWindow(QMainWindow):
 
         self.docks = []
 
+        self.lastMsg = ''
         self.log = QTextEdit(self)
         self.log.setReadOnly(True)
         self.logDock = QDockWidget("Log", self)
@@ -100,6 +101,12 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(str, ErrorPriority)
     def processError(self, msg, priority):
+        if not self.repeatError:
+            if msg == self.lastMsg:
+                return
+            else:
+                self.lastMsg = msg
+
         if(priority.value >= ErrorPriority.Critical.value) and self.errorMode <= ErrorHandlingModes.Verbose.value:
             QErrorMessage.qtHandler().showMessage('Camera Error: ' + msg)
         if self.errorMode < ErrorHandlingModes.Disabled.value:
@@ -117,6 +124,7 @@ class MainWindow(QMainWindow):
 
         settings.beginGroup("ErrorHandling")
         errorMode = int(settings.value("errorMode", ErrorHandlingModes.Default.value))
+        repeatError = settings.value("repeatError", "false") == "true"
         settings.endGroup()
 
         settings.beginGroup("SaveLoad")
@@ -125,7 +133,7 @@ class MainWindow(QMainWindow):
         saveConfig = settings.value("saveConfig", "true") == 'true'
         settings.endGroup()
 
-        settingsForm = SettingsDialog(errorMode, saveGeo, saveProps, saveConfig, self)
+        settingsForm = SettingsDialog(errorMode, repeatError, saveGeo, saveProps, saveConfig, self)
 
         if(settingsForm.exec() == QMessageBox.Accepted):
             settings = QSettings("UBC", "Arpes")
@@ -133,6 +141,8 @@ class MainWindow(QMainWindow):
             settings.beginGroup("ErrorHandling")
             self.errorMode = settingsForm.errorCombo.currentIndex()
             settings.setValue("errorMode", str(self.errorMode))
+            self.repeatError = settingsForm.errorRepeatCheck.isChecked()
+            settings.setValue("repeatError", settingsForm.errorRepeatCheck.isChecked())
             settings.endGroup()
 
             settings.beginGroup("SaveLoad")
@@ -148,6 +158,7 @@ class MainWindow(QMainWindow):
 
         settings.beginGroup("ErrorHandling")
         settings.setValue("errorMode", str(self.errorMode))
+        settings.setValue("repeatError", self.repeatError)
         settings.endGroup()
 
         settings.beginGroup("SaveLoad")
@@ -195,6 +206,7 @@ class MainWindow(QMainWindow):
 
         settings.beginGroup("ErrorHandling")
         self.errorMode = int(settings.value("errorMode", ErrorHandlingModes.Default.value))
+        self.repeatError = settings.value("repeatError", "false") == "true"
         settings.endGroup()
 
         settings.beginGroup("SaveLoad")
