@@ -309,6 +309,11 @@ class PGCameraDaemon(QThread):
         ret, thresh = cv2.threshold(thresh, self.highThreshold, 255, cv2.THRESH_TOZERO_INV)
         ret, thresh = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY)
 
+        # removes boundaries and small black points inside contours
+        kernel = np.ones((10, 10), np.uint8)
+        thresh = cv2.erode(thresh, kernel, iterations=1)
+        thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
+
         if (self.imageMode == ImageMode.Threshold):
             self.receivedFrame.emit(np.stack([thresh, thresh, thresh], axis=2))
 
@@ -327,7 +332,7 @@ class PGCameraDaemon(QThread):
             if (difference <= self.sampleDiff and abs(area - sampleArea) <= self.areaAllowance):
                 x, y, w, h = cv2.boundingRect(cnt)
 
-                self.sampleDetected.emit(int(x + w / 2), int(y + h / 2), w, h, difference)
+                self.sampleDetected.emit(int(x + w / 2), int(y + h / 2), w, h, area)
 
                 image = cv2.drawContours(image, [cnt], 0, (255, 255, 255), 3)
                 img = cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
