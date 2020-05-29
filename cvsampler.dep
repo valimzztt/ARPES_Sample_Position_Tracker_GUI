@@ -1,0 +1,13 @@
+Cython==0.25.1
+numpy==1.11.2
+pbr==1.10.0
+pkg-resources==0.0.0
+pyflycapture2==0.1+dev
+PyQt5==5.7
+scipy==0.18.1
+sip==4.18.1
+six==1.10.0
+stevedore==1.18.0
+virtualenv==15.0.3
+virtualenv-clone==0.2.6
+virtualenvwrapper==4.7.2

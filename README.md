@@ -62,6 +62,9 @@ The project uses Python bindings to the FlyCapture2 SDK to communicate with Poin
     
     - Run `pip install pyflycapture2`
 
+	c. There is a new repository (2019) in https://flir.app.box.com/s/433et5x1lvwqu5jki446g2ejhkg1xyyx
+	This has not been tested.
+	Another repository can be found under https://meta.box.lenovo.com/v/link/view/ea3d78f8daaa499eaff33fef95251b41
 
 2. Ensure the correct compiler is installed for the python you are using
 
