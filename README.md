@@ -113,4 +113,4 @@ PyCharm is a fantastic IDE from Jetbrains which integrates well with the Anacond
 ## Project
 Finally, to install the project, clone the repository from the Gogs server:
 
-- `git clone https://ultrafast-code.phas.ubc.ca:4647/Moore/CVSampler.git`
+- `git clone https://qmat-code.phas.ubc.ca:2633/giorgio/CVSampler.git`
