@@ -56,15 +56,6 @@ class CameraConfigureWidget(QWidget):
 
 
 
-        @qt_thread_updater.register_continuous
-        def update():
-            for offset in counter:
-                print("Hello")
-
-            #self.camX_edit.setText('Continuous Count: {}'.format(counter))
-            """Update the label with the current value."""
-            #self.camX_edit.setText('Continuous Count: {}'.format(data['counter']))
-
 
         def run(is_alive):
             global counter

@@ -7,16 +7,6 @@ from Algorithms.Algorithm1 import phase_cross_correlation
 from Algorithms.Algorithm2 import imregpoc, TempMatcher
 from skimage.registration import phase_cross_correlation
 import csv
-import keyboard
-import sys
-import os
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QDateTime, Qt, QTimer
-from PyQt5.QtWidgets import (QApplication, QCheckBox, QComboBox, QDateTimeEdit,
-        QDial, QDialog, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit,
-        QProgressBar, QPushButton, QRadioButton, QScrollBar, QSizePolicy,
-        QSlider, QSpinBox, QStyleFactory, QTableWidget, QTabWidget, QTextEdit,
-        QVBoxLayout, QWidget, QMainWindow,  QProgressBar,  QTableWidgetItem)
 from PyQt5.Qt import QThread, QThreadPool, QRunnable, QObject, QWidget, QApplication, QPushButton, QGridLayout, QTextEdit, pyqtSignal, QTextCursor
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
