@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
-from utilities import ErrorPriority
+from Camera.utilities import ErrorPriority
 import numpy as np
 
 class AlgorithmLabel(QWidget):
@@ -126,3 +126,4 @@ class AlgorithmLabel(QWidget):
         displayText += "</table>"
 
         self.text.setText(displayText)
+

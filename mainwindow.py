@@ -5,10 +5,8 @@ import time
 from PyQt5.QtCore import Qt, pyqtSlot, QSettings, QPoint
 from PyQt5.QtGui import QKeySequence, QIcon
 from PyQt5.QtWidgets import *
-from camera.cameraconfigwidget import *
-from camera.cameradaemon import *
-
-from camera.camerawidget import CameraWidget
+from Camera.cameraconfigwidget import *
+from Camera.camerawidget import CameraWidget
 from settingsform import SettingsDialog, ErrorHandlingModes
 
 
@@ -32,21 +30,10 @@ class MainWindow(QMainWindow):
         self.errorMode = int(settings.value("errorMode", ErrorHandlingModes.Default.value))
         settings.endGroup()
 
-        # self.setupUI()
-
-
+        #self.setupUI()
         self.createActions()
 
         self.docks = []
-
-        self.lastMsg = ''
-        self.log = QTextEdit(self)
-        self.log.setReadOnly(True)
-        self.logDock = QDockWidget("Log", self)
-        self.logDock.setWidget(self.log)
-        self.logDock.setObjectName('Log')
-        self.addDockWidget(Qt.BottomDockWidgetArea, self.logDock)
-
         self.panel = CenterPanel(self)
         self.setCentralWidget(self.panel)
         self.loadSettings()
@@ -98,24 +85,6 @@ class MainWindow(QMainWindow):
         QMessageBox.about(self, "About CV Sampler Application",
                           "This application identifies a mineral sample in the vacuum chamber for the Arpes group experiments.");
 
-
-    @pyqtSlot(str, ErrorPriority)
-    def processError(self, msg, priority):
-        if not self.repeatError:
-            if msg == self.lastMsg:
-                return
-            else:
-                self.lastMsg = msg
-
-        if(priority.value >= ErrorPriority.Critical.value) and self.errorMode <= ErrorHandlingModes.Verbose.value:
-            QErrorMessage.qtHandler().showMessage('Camera Error: ' + msg)
-        if self.errorMode < ErrorHandlingModes.Disabled.value:
-            print(msg, file=sys.stderr)
-            if priority.value >= ErrorPriority.Critical.value:
-                msg = time.strftime('<b>[%a, %d %b %Y %H:%M:%S, %z] (', time.gmtime()) + priority.name + ") </b> " + msg
-            else:
-                msg = '(' + priority.name + ') : ' + msg
-            self.log.append(msg + '\n')
 
 
     @pyqtSlot(bool)
@@ -261,34 +230,34 @@ class MainWindow(QMainWindow):
         for camWidget in CameraWidget.camlist:
             settings.beginGroup(camWidget.objectName())
 
-            if saveProps and camWidget.camPropWidget.initialized:
-                settings.beginGroup("CamProps")
-                props = settings.value("props")
-                if props:
-                    camWidget.camPropWidget.properties = props
-                    camWidget.camPropWidget.setAllProperties()
-                    camWidget.camPropWidget.revertSavedProperties()
-                settings.endGroup()
+            #if saveProps and camWidget.camPropWidget.initialized:
+                #settings.beginGroup("CamProps")
+                #props = settings.value("props")
+                #if props:
+                    #camWidget.camPropWidget.properties = props
+                    #camWidget.camPropWidget.setAllProperties()
+                    #camWidget.camPropWidget.revertSavedProperties()
+                #settings.endGroup()
 
-            if saveConfig:
-                settings.beginGroup("CamConfig")
-                config = camWidget.cameraConfigWidget.cam_config
-                reload = False
-                for k, v in config.items():
-                    val = settings.value(k)
-                    if val:
-                        config[k] = val
-                        reload = True
-                if reload:
-                    camWidget.cameraConfigWidget.reloadConfigData()
-                settings.endGroup()
+            #if saveConfig:
+                #settings.beginGroup("CamConfig")
+                #config = camWidget.cameraConfigWidget.cam_config
+                #reload = False
+                #for k, v in config.items():
+                    #val = settings.value(k)
+                    #if val:
+                        #config[k] = val
+                        #reload = True
+                #if reload:
+                    #camWidget.cameraConfigWidget.reloadConfigData()
+                #settings.endGroup()
 
             settings.endGroup()
 
     def addNewCamera(self, id):
         """
-        Adds a new camera widget
-        :param id: string identifier for the camera
+        Adds a new Camera widget
+        :param id: string identifier for the Camera
         :return:
         """
         cameraWidget = CameraWidget(self, id)

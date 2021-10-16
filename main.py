@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QApplication, QLabel, QDesktopWidget
 from PyQt5.QtCore import QTimer
 from mainwindow import MainWindow
 
+
 def main():
     qt_app = QApplication(sys.argv)
     mainwindow = MainWindow()
@@ -15,3 +16,5 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
+
+

@@ -29,7 +29,7 @@ class PGCameraProperties(Enum):
 
 class CameraPropertiesWidget(QWidget):
     """
-    Widget to adjust camera properties
+    Widget to adjust Camera properties
     """
     propertyChanged = pyqtSignal(str)
 
@@ -79,7 +79,7 @@ class CameraPropertiesWidget(QWidget):
 
             slider.setToolTip("Adjust the value of {0}".format(propname))
             spin.setToolTip("Adjust the value of {0}".format(propname))
-            auto.setToolTip("Set whether the camera auto-adjusts this property")
+            auto.setToolTip("Set whether the Camera auto-adjusts this property")
             enable.setToolTip("Enable this property")
 
             slider.setObjectName(propname)
@@ -342,7 +342,7 @@ class CameraPropertiesWidget(QWidget):
             auto = self.autoBoxes[prop.name].isChecked()
 
             if auto:
-                # update the property with that from the camera
+                # update the property with that from the Camera
                 propVal = self.camD.getProperty(prop.value)
 
                 if propVal == -1:

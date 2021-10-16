@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtMultimedia import *
 from PyQt5.QtGui import QImage, QPalette, QPainter, QRegion, QImageWriter
 from PyQt5.QtCore import QRect, QPoint, Qt, pyqtSlot, pyqtSignal
-from utilities import ErrorPriority
+from Camera.utilities import ErrorPriority
 import numpy as np
 import time
 import cv2
@@ -123,7 +123,7 @@ The ViewfinderWidget class uses the VideoWidgetSurface class to implement a vide
 """
 class ViewfinderWidget(QWidget):
     """"
-    This class is the widget that holds the viewport into the camera
+    This class is the widget that holds the viewport into the Camera
     """
     sampleClicked = pyqtSignal(int, int)
 
@@ -144,7 +144,7 @@ class ViewfinderWidget(QWidget):
         self.surface = VideoWidgetSurface(self)
         self.lastShowTime = time.time()
 
-        # rate per second at which camera view is refreshed and re-drawn (since drawing takes time)
+        # rate per second at which Camera view is refreshed and re-drawn (since drawing takes time)
         self.FRAME_RATE = 24.0  # anything above 24 is considered smooth motion
 
 
@@ -183,12 +183,12 @@ class ViewfinderWidget(QWidget):
     @pyqtSlot(np.ndarray)
     def processFrame(self, frame):
         """
-        Process the Numpy array from a camera to display it on the surface
-        :param frame: the numpy pixel array from the camera daemon
+        Process the Numpy array from a Camera to display it on the surface
+        :param frame: the numpy pixel array from the Camera daemon
         :return:
         """
 
-        # this updates the video display according to the frame rate of the camera, otherwise it is unnecessary to update the feed any faster
+        # this updates the video display according to the frame rate of the Camera, otherwise it is unnecessary to update the feed any faster
         if (time.time() - self.lastShowTime < 1.0/self.FRAME_RATE):
             return
 

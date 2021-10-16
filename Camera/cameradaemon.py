@@ -1,12 +1,12 @@
 from enum import Enum, unique
 
-import flycapture2 as fc2
+import pyflycap2 as fc2
 import numpy as np
 from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot, QMutex, QMutexLocker
 from scipy.signal import find_peaks_cwt
 
-from camera.cameraconfigwidget import CameraConfigureWidget
-from utilities import ErrorPriority
+from Camera.cameraconfigwidget import CameraConfigureWidget
+from Camera.utilities import ErrorPriority
 import cv2
 
 
@@ -26,7 +26,7 @@ class ImageMode(Enum):
 
 class PGCameraDaemon(QThread):
     """
-    This class implements a camera thread for use with Point Grey Flea-3 Camera.
+    This class implements a Camera thread for use with Point Grey Flea-3 Camera.
 
     This class is instantiated in the main GUI thread, but the run() function operates as a separate thread.
 
@@ -62,11 +62,11 @@ class PGCameraDaemon(QThread):
 
     def __init__(self, parent=None, cam_index=0, cam_mode=fc2.MODE_0, cam_x = 0, cam_y = 0, cam_w=1280, cam_h=960, cam_pixformat=fc2.PIXEL_FORMAT_RGB8):
         """
-        Starts a camera context with the given camera information
-        :param cam_index: addStr of the camera
+        Starts a Camera context with the given Camera information
+        :param cam_index: addStr of the Camera
         :param cam_mode: fc2 mode to use, default is MODE_0. See FlyCapture2 documentation for more details
-        :param cam_w: width of camera feed
-        :param cam_h: height of camera feed
+        :param cam_w: width of Camera feed
+        :param cam_h: height of Camera feed
         :param cam_pixformat: pixel format to use. By default, uses a 24-bit RGB scheme.
         """
         QThread.__init__(self, parent)
@@ -144,16 +144,16 @@ class PGCameraDaemon(QThread):
     @_monitorForErrors()
     def changeCameraConfig(self, cam_index=0, cam_mode=fc2.MODE_0, cam_x = 0, cam_y = 0, cam_w=1280, cam_h=960, cam_pixformat=fc2.PIXEL_FORMAT_RGB8):
         """
-        If the camera daemon is stopped, then change the configuration settings, otherwise, emit error message.
-        :param cam_index: addStr of the camera
+        If the Camera daemon is stopped, then change the configuration settings, otherwise, emit error message.
+        :param cam_index: addStr of the Camera
         :param cam_mode: fc2 mode to use, default is MODE_0. See FlyCapture2 documentation for more details
-        :param cam_w: width of camera feed
-        :param cam_h: height of camera feed
+        :param cam_w: width of Camera feed
+        :param cam_h: height of Camera feed
         :param cam_pixformat: pixel format to use. By default, uses a 24-bit RGB scheme.
         :return:
         """
         if self.state == PGCameraStates.Streaming or self.isRunning():
-            self.erroredOut.emit('Cannot change camera configuration while streaming!', ErrorPriority.Notice)
+            self.erroredOut.emit('Cannot change Camera configuration while streaming!', ErrorPriority.Notice)
         else: #if the thread is not running
             # self.context.stop_capture()
             self.context.disconnect()
@@ -178,10 +178,10 @@ class PGCameraDaemon(QThread):
     def getFrameRate(self):
         """
         Returns the frame rate as a number
-        :return: the frame rate of the current camera configuration, otherwise if there is an error it gives -1
+        :return: the frame rate of the current Camera configuration, otherwise if there is an error it gives -1
         """
         if self.state == PGCameraStates.Disconnected or self.state == PGCameraStates.Invalid:
-            self.erroredOut.emit('Cannot get frame rate, camera is disconnected!', ErrorPriority.Notice)
+            self.erroredOut.emit('Cannot get frame rate, Camera is disconnected!', ErrorPriority.Notice)
             # impossible frame_rate
             return -1
         else:
@@ -197,7 +197,7 @@ class PGCameraDaemon(QThread):
         :return: the dictionary of the property if valid, otherwise return -1
         """
         if self.state == PGCameraStates.Disconnected or self.state == PGCameraStates.Invalid:
-            self.erroredOut.emit('Cannot get property, {0}, camera is disconnected!'.format(prop), ErrorPriority.Notice)
+            self.erroredOut.emit('Cannot get property, {0}, Camera is disconnected!'.format(prop), ErrorPriority.Notice)
             return -1
         else:
             p = self.context.get_property(prop)
@@ -210,7 +210,7 @@ class PGCameraDaemon(QThread):
         :return:
         """
         if self.state == PGCameraStates.Disconnected or self.state == PGCameraStates.Invalid:
-            self.erroredOut.emit('Cannot set property, {0}, camera is disconnected!'.format(prop), ErrorPriority.Notice)
+            self.erroredOut.emit('Cannot set property, {0}, Camera is disconnected!'.format(prop), ErrorPriority.Notice)
         else:
             self.context.set_property(**prop)
 
@@ -218,7 +218,7 @@ class PGCameraDaemon(QThread):
     @pyqtSlot(bool)
     def stream(self, play):
         """
-        Stop streaming frames from the camera
+        Stop streaming frames from the Camera
         :return:
         """
         locker = QMutexLocker(self.stopmutex)
@@ -229,14 +229,14 @@ class PGCameraDaemon(QThread):
 
     def run(self):
         """
-        Runs the loop to get a frame from the camera
+        Runs the loop to get a frame from the Camera
         :return:
         """
 
-        # check that the camera is connected
+        # check that the Camera is connected
         self.statemutex.lock()
         if(self.state != PGCameraStates.Connected):
-            self.erroredOut.emit('Cannot start stream, camera is disconnected!', ErrorPriority.Notice)
+            self.erroredOut.emit('Cannot start stream, Camera is disconnected!', ErrorPriority.Notice)
             self.statemutex.unlock()
             return #quit if not connected
         #else
@@ -258,14 +258,14 @@ class PGCameraDaemon(QThread):
 
         self.changeStateTo(PGCameraStates.Streaming)
 
-        # create empty image for holding camera data
+        # create empty image for holding Camera data
         im = fc2.Image()
 
         errCount = 0
 
         while not self.stop:
 
-            #load image from camera
+            #load image from Camera
             try:
                 self.context.retrieve_buffer(im)
             except Exception as e:
